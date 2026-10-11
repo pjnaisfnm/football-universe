@@ -1,0 +1,2202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Football Universe">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#0F1C2B">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Football Universe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: a dark scoreboard bar on top; leagues grouped by country; a league opens with its matches
+   beside its table on a wide iPad, stacked with a switch on narrow screens. Scores sit in scoreboard tiles. */
+:root{
+  --bg:#EDF1F5; --surface:#FFFFFF; --surface-2:#E3E9EF; --ink:#0F1C2B; --ink-soft:#495869; --ink-faint:#7B8898; --line:#D2DAE3;
+  --bar:#0F1C2B; --bar-ink:#F1F5F9; --bar-soft:#9DAEC0;
+  --accent:#1D5BD3; --accent-ink:#FFFFFF; --accent-soft:#DCE6FA;
+  --board:#122031; --board-ink:#FFD24A; --board-line:#2A3B52;
+  --good:#1B7A4A; --good-soft:#DDF1E6; --warn:#A35F00; --warn-soft:#FBEBD3; --bad:#B22238; --bad-soft:#F8DDE1;
+  --b-champ:#E2B11F; --t-champ:#FBF1CC;
+  --b-cl:#3E7BE0;    --t-cl:#E1EBFB;
+  --b-el:#E9822F;    --t-el:#FCE9DA;
+  --b-ecl:#2F9E5F;   --t-ecl:#DDF2E5;
+  --b-can:#8257D6;   --t-can:#ECE4FA;
+  --b-promo:#2F9E5F; --t-promo:#DDF2E5;
+  --b-po:#7CC79A;    --t-po:#EEF8F1;
+  --b-rel:#D23A50;   --t-rel:#FBE2E6;
+  --display:"Barlow Condensed","Arial Narrow","Roboto Condensed",sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --radius:10px; --chip-ink:#FFFFFF;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C131B; --surface:#141E29; --surface-2:#1C2835; --ink:#E7EDF3; --ink-soft:#A7B4C2; --ink-faint:#768495; --line:#273444;
+    --bar:#060B11; --bar-ink:#EEF3F8; --bar-soft:#8C9DB0;
+    --accent:#6F9CFF; --accent-ink:#0B1424; --accent-soft:#1D2D4A;
+    --board:#05090E; --board-ink:#FFD24A; --board-line:#22303F;
+    --good:#5CC48C; --good-soft:#15291F; --warn:#E5A84A; --warn-soft:#302312; --bad:#F07A8C; --bad-soft:#331A20;
+    --b-champ:#E9BD3A; --t-champ:#30290F;
+    --b-cl:#5D93F0;    --t-cl:#15233A;
+    --b-el:#F0944B;    --t-el:#33220F;
+    --b-ecl:#46B677;   --t-ecl:#122A1D;
+    --b-can:#9D7BEA;   --t-can:#231B3A;
+    --b-promo:#46B677; --t-promo:#122A1D;
+    --b-po:#3F8A5F;    --t-po:#0F2018;
+    --b-rel:#E8566C;   --t-rel:#331820;
+    --chip-ink:#0B1424;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C131B; --surface:#141E29; --surface-2:#1C2835; --ink:#E7EDF3; --ink-soft:#A7B4C2; --ink-faint:#768495; --line:#273444;
+  --bar:#060B11; --bar-ink:#EEF3F8; --bar-soft:#8C9DB0;
+  --accent:#6F9CFF; --accent-ink:#0B1424; --accent-soft:#1D2D4A;
+  --board:#05090E; --board-ink:#FFD24A; --board-line:#22303F;
+  --good:#5CC48C; --good-soft:#15291F; --warn:#E5A84A; --warn-soft:#302312; --bad:#F07A8C; --bad-soft:#331A20;
+  --b-champ:#E9BD3A; --t-champ:#30290F;
+  --b-cl:#5D93F0;    --t-cl:#15233A;
+  --b-el:#F0944B;    --t-el:#33220F;
+  --b-ecl:#46B677;   --t-ecl:#122A1D;
+  --b-can:#9D7BEA;   --t-can:#231B3A;
+  --b-promo:#46B677; --t-promo:#122A1D;
+  --b-po:#3F8A5F;    --t-po:#0F2018;
+  --b-rel:#E8566C;   --t-rel:#331820;
+  --chip-ink:#0B1424;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--body); font-size:15px; line-height:1.45; padding:0 16px; padding-block:0 48px}
+h1,h2,h3{font-family:var(--display); text-wrap:balance; margin:0; letter-spacing:.01em}
+button,input,select{font-family:inherit; color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent); outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--ink-soft)} .faint{color:var(--ink-faint)}
+
+/* ---------- top bar ---------- */
+.bar{position:sticky; top:env(safe-area-inset-top,0px); z-index:20; margin:0 -16px 18px; background:var(--bar); color:var(--bar-ink); padding:10px 16px 0}
+.bar-in{max-width:1180px; margin:0 auto}
+.bar-top{display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:space-between}
+.brand{display:flex; align-items:baseline; gap:10px}
+.brand h1{font-size:26px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; line-height:1}
+.season-pill{font-family:var(--display); font-weight:700; font-size:15px; letter-spacing:.06em; color:var(--board-ink); border:1px solid var(--board-line); background:var(--board); border-radius:6px; padding:2px 8px}
+.save-state{font-size:12.5px; color:var(--bar-soft)}
+.save-state.bad{color:#FF9AA8; font-weight:600}
+.tabs{display:flex; gap:2px; overflow-x:auto; margin-top:8px; scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none; border:0; background:transparent; color:var(--bar-soft); font-family:var(--display); font-weight:700; font-size:17px; letter-spacing:.04em; text-transform:uppercase; padding:9px 12px 10px; border-bottom:3px solid transparent}
+.tab:hover{color:var(--bar-ink)}
+.tab[aria-current="page"]{color:var(--bar-ink); border-bottom-color:var(--board-ink)}
+
+.wrap{max-width:1180px; margin:0 auto}
+.page-head{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px}
+.page-head h2{font-size:32px; font-weight:800; line-height:1.05}
+.eyebrow{font-family:var(--display); font-weight:700; font-size:14px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft)}
+.lede{max-width:65ch; color:var(--ink-soft); margin:4px 0 0}
+
+/* ---------- controls ---------- */
+.btn{border:1px solid var(--line); background:var(--surface); color:var(--ink); border-radius:8px; padding:10px 16px; font-size:15px; font-weight:600; min-height:44px}
+.btn:hover{border-color:var(--ink-faint)}
+.btn-primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
+.btn-danger{background:var(--bad); color:#fff; border-color:var(--bad)}
+.btn-small{padding:6px 12px; min-height:36px; font-size:14px}
+.btn[disabled]{opacity:.45; cursor:not-allowed}
+.linkish{border:0; background:none; padding:0; color:var(--accent); font-weight:600; text-decoration:underline; text-underline-offset:3px}
+.field{font-size:16px; border:1px solid var(--line); background:var(--surface); border-radius:8px; padding:10px 12px; min-height:44px}
+.banner{display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; background:var(--warn-soft); color:var(--ink); border:1px solid var(--warn); border-radius:var(--radius); padding:12px 14px; margin-bottom:16px}
+.banner.bad{background:var(--bad-soft); border-color:var(--bad)}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:16px}
+
+/* ---------- league list ---------- */
+.search-row{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:18px}
+.search-row .field{flex:1 1 280px; max-width:520px}
+.totals{font-size:14px; color:var(--ink-soft)}
+.country{margin-top:22px}
+.country h3{font-size:21px; font-weight:700; display:flex; align-items:baseline; gap:10px; padding-bottom:6px; border-bottom:2px solid var(--ink); margin-bottom:10px}
+.country h3 .eu{font-family:var(--body); font-size:12.5px; font-weight:500; color:var(--ink-faint)}
+.league-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:10px}
+.lcard{display:flex; flex-direction:column; gap:6px; text-align:left; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; min-width:0}
+.lcard:hover{border-color:var(--ink-faint)}
+.lcard .tier{font-family:var(--display); font-weight:700; font-size:13px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-faint)}
+.lcard .name{font-family:var(--display); font-weight:700; font-size:21px; line-height:1.1}
+.lcard .leader{font-size:13.5px; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.meter{height:6px; background:var(--surface-2); border-radius:3px; overflow:hidden}
+.meter i{display:block; height:100%; background:var(--accent)}
+.meter-row{display:flex; align-items:center; gap:8px; font-size:12.5px; color:var(--ink-faint)}
+.meter-row .meter{flex:1}
+.results{display:grid; gap:6px; margin-bottom:8px}
+.hit{display:flex; justify-content:space-between; gap:10px; text-align:left; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-size:15px}
+.hit span:last-child{color:var(--ink-faint); font-size:13px; text-align:right}
+
+/* ---------- league page ---------- */
+.back{margin-bottom:10px}
+.seg{display:inline-flex; background:var(--surface-2); border-radius:9px; padding:3px; gap:2px}
+.seg button{border:0; background:transparent; border-radius:7px; padding:8px 16px; font-family:var(--display); font-weight:700; font-size:16px; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-soft); min-height:40px}
+.seg button[aria-pressed="true"]{background:var(--surface); color:var(--ink); box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.lbody{display:grid; gap:18px; margin-top:14px}
+.lbody > *{min-width:0}
+.lbody .pane-matches,.lbody .pane-table{display:none}
+.lbody[data-pane="matches"] .pane-matches{display:block}
+.lbody[data-pane="table"] .pane-table{display:block}
+.lbody[data-pane="clubs"] .pane-clubs{display:block}
+.pane-clubs{display:none}
+@media (min-width:1000px){
+  .lbody[data-pane="matches"],.lbody[data-pane="table"]{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+  .lbody[data-pane="matches"] .pane-table,.lbody[data-pane="table"] .pane-matches{display:block}
+  .lbody .pane-table{order:1} .lbody .pane-matches{order:2}
+  .seg .only-narrow{display:none}
+  .seg.seg-narrow{display:none}
+}
+.panel-title{font-family:var(--display); font-weight:700; font-size:15px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft); margin:0 0 8px}
+
+/* round navigator */
+.roundnav{display:flex; align-items:center; gap:8px; background:var(--board); color:var(--bar-ink); border-radius:var(--radius); padding:8px; margin-bottom:10px}
+.roundnav .arrow{border:1px solid var(--board-line); background:transparent; color:var(--board-ink); border-radius:8px; width:44px; height:44px; font-size:20px; font-weight:700; flex:none}
+.roundnav .arrow[disabled]{opacity:.3}
+.roundnav .mid{flex:1; text-align:center; min-width:0}
+.roundnav select{font-family:var(--display); font-weight:800; font-size:22px; letter-spacing:.06em; text-transform:uppercase; color:var(--board-ink); background:transparent; border:0; text-align:center; text-align-last:center; padding:0 4px; max-width:100%}
+.roundnav select option{color:#000; background:#fff}
+.roundnav .sub{display:block; font-size:12.5px; color:var(--bar-soft)}
+.quick{display:flex; align-items:center; gap:8px; font-size:13.5px; color:var(--ink-soft); margin:0 0 8px}
+.quick input{width:20px; height:20px}
+
+/* matches */
+.matches{display:grid; gap:6px}
+.match{display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) 36px; align-items:center; gap:8px; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:6px 8px}
+.match .team{font-weight:600; font-size:15.5px; line-height:1.2; overflow-wrap:anywhere}
+.match .home{text-align:right}
+.score{display:flex; align-items:center; gap:4px}
+.tile{width:48px; height:52px; border-radius:7px; border:1px solid var(--board-line); background:var(--board); color:var(--board-ink); font-family:var(--display); font-weight:800; font-size:28px; text-align:center; padding:0; caret-color:var(--board-ink)}
+.tile::placeholder{color:#3A4B60}
+.score .dash{font-family:var(--display); font-weight:800; font-size:22px; color:var(--ink-faint)}
+.match.done{border-color:var(--line)}
+.match.done .team.win{color:var(--ink)}
+.match.done .team.lose{color:var(--ink-soft); font-weight:500}
+.match.half{border-color:var(--warn); background:var(--warn-soft)}
+.match .clear{border:0; background:transparent; color:var(--ink-faint); font-size:20px; width:36px; height:36px; border-radius:6px}
+.match .clear:hover{background:var(--surface-2); color:var(--ink)}
+.match .clear[hidden]{display:none}
+.half-note{grid-column:1/-1; font-size:12.5px; color:var(--warn); text-align:center}
+.next-round{margin-top:12px; display:flex; justify-content:flex-end}
+
+/* tables */
+.table-wrap{overflow-x:auto; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius)}
+table.lt{width:100%; border-collapse:collapse; font-size:14.5px; font-variant-numeric:tabular-nums}
+.lt th{font-family:var(--display); font-weight:700; font-size:13.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); text-align:center; padding:9px 6px; border-bottom:1px solid var(--line); white-space:nowrap}
+.lt th.club{text-align:left}
+.lt td{padding:7px 6px; text-align:center; border-bottom:1px solid var(--line); white-space:nowrap}
+.lt tr:last-child td{border-bottom:0}
+.lt td.pos{width:38px; font-weight:700; border-left:5px solid transparent}
+.lt td.club{text-align:left; font-weight:600; white-space:normal; min-width:130px}
+.lt td.pts{font-weight:800; font-size:16px}
+.lt tr.hl td{outline:2px solid var(--accent); outline-offset:-2px}
+.form{display:inline-flex; gap:3px}
+.form b{display:inline-block; width:18px; height:18px; line-height:18px; border-radius:4px; font-size:11px; font-weight:700; color:var(--chip-ink)}
+.form .W{background:var(--good)} .form .D{background:var(--ink-faint)} .form .L{background:var(--bad)}
+.band-champ td{background:var(--t-champ)} .band-champ td.pos{border-left-color:var(--b-champ)}
+.band-cl td{background:var(--t-cl)}       .band-cl td.pos{border-left-color:var(--b-cl)}
+.band-el td{background:var(--t-el)}       .band-el td.pos{border-left-color:var(--b-el)}
+.band-ecl td{background:var(--t-ecl)}     .band-ecl td.pos{border-left-color:var(--b-ecl)}
+.band-can td{background:var(--t-can)}     .band-can td.pos{border-left-color:var(--b-can)}
+.band-promo td{background:var(--t-promo)} .band-promo td.pos{border-left-color:var(--b-promo)}
+.band-po td{background:var(--t-po)}       .band-po td.pos{border-left-color:var(--b-po)}
+.band-rel td{background:var(--t-rel)}     .band-rel td.pos{border-left-color:var(--b-rel)}
+.legend{display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:10px; font-size:13px; color:var(--ink-soft)}
+.legend span{display:inline-flex; align-items:center; gap:6px}
+.legend i{width:14px; height:14px; border-radius:3px; display:inline-block}
+.tiebreak{font-size:12.5px; color:var(--ink-faint); margin-top:6px}
+@media (max-width:620px){ .lt .wide{display:none} }
+
+/* clubs pane */
+.club-list{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:8px}
+.club-list label{display:flex; flex-direction:column; gap:4px; font-size:12.5px; color:var(--ink-faint)}
+
+/* european places */
+.eu-table{width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums}
+.eu-table th{font-family:var(--display); font-weight:700; font-size:13.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint); padding:8px 6px; border-bottom:1px solid var(--line); text-align:center; white-space:nowrap}
+.eu-table th:first-child,.eu-table td:first-child,.eu-table th:nth-child(2),.eu-table td:nth-child(2){text-align:left}
+.eu-table td{padding:6px; border-bottom:1px solid var(--line); text-align:center}
+.eu-table input{width:56px; text-align:center; font-size:16px; border:1px solid var(--line); border-radius:6px; padding:6px 4px; background:var(--surface)}
+.eu-table tfoot td{font-weight:700; border-bottom:0}
+.dot{display:inline-block; width:10px; height:10px; border-radius:2px; margin-right:6px; vertical-align:middle}
+
+/* new season */
+.steps{display:grid; gap:14px}
+.step h3{font-size:22px; font-weight:700; margin-bottom:6px}
+.step .stepno{font-family:var(--display); font-weight:800; color:var(--ink-faint); margin-right:8px}
+.move-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:10px; margin-top:8px}
+.move{border:1px solid var(--line); border-radius:var(--radius); padding:12px; background:var(--surface); min-width:0}
+.move h4{font-family:var(--display); font-size:18px; font-weight:700; margin:0 0 8px}
+.move ul{list-style:none; margin:0; padding:0; display:grid; gap:4px}
+.move li{display:flex; gap:8px; align-items:center; font-size:14.5px}
+.tag{font-family:var(--display); font-weight:700; font-size:12px; letter-spacing:.06em; text-transform:uppercase; border-radius:4px; padding:1px 6px; flex:none}
+.tag.up{background:var(--t-promo); color:var(--good)} .tag.down{background:var(--t-rel); color:var(--bad)}
+.rules-row{display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:13px; color:var(--ink-soft); margin-top:10px}
+.rules-row input{width:52px; font-size:16px; text-align:center; border:1px solid var(--line); border-radius:6px; padding:4px; background:var(--surface)}
+.move select{font-size:16px; max-width:100%}
+.out-row{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:8px; align-items:center; font-size:14.5px}
+.out-row input{font-size:16px; width:100%; border:1px solid var(--line); border-radius:6px; padding:6px 8px; background:var(--surface)}
+details.unf summary{cursor:pointer; color:var(--accent); font-weight:600}
+.ok-line{color:var(--good); font-weight:600}
+.warn-line{color:var(--warn); font-weight:600}
+
+/* history */
+.hist-season{margin-top:18px}
+.champ-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:8px; margin-top:8px}
+.champ{display:flex; flex-direction:column; text-align:left; gap:2px; background:var(--surface); border:1px solid var(--line); border-left:5px solid var(--b-champ); border-radius:8px; padding:9px 12px}
+.champ .lg{font-size:12.5px; color:var(--ink-faint)}
+.champ .cl{font-family:var(--display); font-weight:700; font-size:19px}
+
+/* backup */
+.two{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px}
+.facts{display:grid; grid-template-columns:auto 1fr; gap:6px 14px; font-size:14.5px; margin-top:8px}
+.facts dt{color:var(--ink-faint)} .facts dd{margin:0; font-weight:600}
+.filebtn{position:relative; overflow:hidden; display:inline-flex; align-items:center}
+.filebtn input{position:absolute; inset:0; opacity:0; cursor:pointer; font-size:0}
+
+
+/* ---------- europe ---------- */
+.cupbar{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px}
+.cupbtn{display:flex; align-items:center; gap:8px; border:1px solid var(--line); background:var(--surface); border-radius:999px; padding:8px 14px 8px 10px; font-family:var(--display); font-weight:700; font-size:17px; letter-spacing:.03em; min-height:44px}
+.cupbtn i{width:14px; height:14px; border-radius:50%; display:inline-block}
+.cupbtn[aria-pressed="true"]{background:var(--ink); color:var(--bg); border-color:var(--ink)}
+.stages{display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; margin-bottom:16px; scrollbar-width:thin}
+.stage{flex:none; display:flex; flex-direction:column; align-items:flex-start; gap:2px; border:1px solid var(--line); background:var(--surface); border-radius:10px; padding:8px 12px; min-width:104px; text-align:left}
+.stage .nm{font-family:var(--display); font-weight:700; font-size:17px}
+.stage .st{font-size:12px; color:var(--ink-faint)}
+.stage[aria-pressed="true"]{border-color:var(--ink); box-shadow:inset 0 -3px 0 var(--ink)}
+.stage.done .st{color:var(--good)} .stage.now .st{color:var(--accent); font-weight:600} .stage.wait .st{color:var(--warn)} .stage.skip{opacity:.55}
+.ties{display:grid; gap:10px}
+.tie{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:8px 10px; display:grid; gap:6px}
+.tie.decided{border-color:var(--line)}
+.tie.level{border-color:var(--warn); background:var(--warn-soft)}
+.leg{display:grid; grid-template-columns:48px minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:8px}
+.leg .lbl{font-family:var(--display); font-weight:700; font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint)}
+.leg .team{font-weight:600; font-size:15px; line-height:1.2; overflow-wrap:anywhere}
+.leg .home{text-align:right}
+.tie-foot{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; font-size:13.5px; color:var(--ink-soft); padding-top:4px; border-top:1px dashed var(--line)}
+.tie-foot b{color:var(--ink)}
+.pens{display:flex; gap:6px; flex-wrap:wrap; align-items:center}
+.pens button{min-height:36px; padding:6px 12px; font-size:14px}
+.pens button[aria-pressed="true"]{background:var(--good); border-color:var(--good); color:#fff}
+.flag{font-size:12px; color:var(--ink-faint); font-weight:500}
+.win{color:var(--good); font-weight:700}
+.note-box{background:var(--surface-2); border-radius:var(--radius); padding:12px 14px; margin-bottom:14px; font-size:14px; color:var(--ink-soft)}
+.field-list{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:6px; margin:10px 0 14px}
+.field-list span{display:flex; justify-content:space-between; gap:8px; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:7px 10px; font-size:14px}
+.field-list em{font-style:normal; color:var(--ink-faint); font-size:12.5px; white-space:nowrap}
+.pots{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; margin:10px 0 14px}
+.pot{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:10px 12px}
+.pot h4{font-family:var(--display); font-size:18px; margin:0 0 6px}
+.pot ol{margin:0; padding-left:20px; font-size:14px; display:grid; gap:2px}
+.champion{display:flex; align-items:center; gap:14px; background:var(--t-champ); border:2px solid var(--b-champ); border-radius:14px; padding:16px 18px; margin-bottom:16px}
+.champion .cup{font-family:var(--display); font-weight:700; font-size:14px; letter-spacing:.08em; text-transform:uppercase; color:var(--ink-soft)}
+.champion .who{font-family:var(--display); font-weight:800; font-size:30px; line-height:1.05}
+.trophy{width:44px; height:44px; flex:none}
+.band-q td{background:var(--t-ecl)} .band-q td.pos{border-left-color:var(--b-ecl)}
+.band-kp td{background:var(--t-champ)} .band-kp td.pos{border-left-color:var(--b-champ)}
+.band-out td{color:var(--ink-faint)}
+.clublink{border:0; background:none; padding:0; font:inherit; color:inherit; text-align:left; cursor:pointer; text-decoration:underline; text-decoration-color:var(--line); text-underline-offset:3px}
+.clublink:hover{text-decoration-color:var(--ink-faint)}
+
+/* ---------- coefficients ---------- */
+.coef-table td.cur{background:var(--accent-soft); font-weight:700}
+.coef-table th.cur{color:var(--accent)}
+.chips{display:inline-flex; gap:3px; flex-wrap:wrap}
+.chip{display:inline-block; min-width:26px; text-align:center; border-radius:4px; padding:1px 5px; font-size:12px; font-weight:700; font-family:var(--display); letter-spacing:.03em}
+.chip.cl{background:var(--t-cl); color:var(--b-cl); box-shadow:inset 0 0 0 1px var(--b-cl)}
+.chip.el{background:var(--t-el); color:var(--b-el); box-shadow:inset 0 0 0 1px var(--b-el)}
+.chip.ecl{background:var(--t-ecl); color:var(--b-ecl); box-shadow:inset 0 0 0 1px var(--b-ecl)}
+.chip.can{background:var(--t-can); color:var(--b-can); box-shadow:inset 0 0 0 1px var(--b-can)}
+.up{color:var(--good); font-weight:700} .down{color:var(--bad); font-weight:700}
+.access-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:12px}
+.band-row{display:grid; grid-template-columns:auto auto auto auto auto auto; gap:6px; align-items:center; font-size:13.5px; color:var(--ink-soft); margin-bottom:6px}
+.band-row input{width:50px; font-size:16px; text-align:center; border:1px solid var(--line); border-radius:6px; padding:4px; background:var(--surface)}
+.solve{font-size:13.5px; margin-top:8px}
+
+/* ---------- club page ---------- */
+.club-head{display:flex; flex-wrap:wrap; gap:10px 24px; align-items:baseline; margin-bottom:14px}
+.facts-row{display:flex; flex-wrap:wrap; gap:8px}
+.fact{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:10px 14px; min-width:120px}
+.fact .k{font-size:12px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.05em}
+.fact .v{font-family:var(--display); font-weight:700; font-size:22px}
+.res-list{display:grid; gap:4px; margin-top:8px}
+.res{display:grid; grid-template-columns:62px minmax(0,1fr) auto; gap:10px; align-items:center; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:7px 10px; font-size:14px}
+.res .r{font-family:var(--display); font-weight:800; font-size:17px}
+.res .tag{justify-self:end}
+
+/* welcome */
+.welcome{max-width:640px; margin:40px auto; text-align:left}
+.welcome h2{font-size:40px; font-weight:800; text-transform:uppercase; letter-spacing:.04em}
+
+/* dialog */
+.dlg-back{position:fixed; inset:0; background:rgba(5,10,16,.55); z-index:50; display:flex; align-items:flex-start; justify-content:center; padding:12vh 16px 16px; overflow-y:auto}
+.dlg{background:var(--surface); color:var(--ink); border-radius:14px; width:100%; max-width:480px; padding:20px; box-shadow:0 16px 40px rgba(0,0,0,.35)}
+.dlg h3{font-size:24px; font-weight:800; margin-bottom:8px}
+.dlg p{margin:0 0 10px}
+.dlg ul{margin:0 0 10px; padding-left:20px}
+.dlg-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:16px; flex-wrap:wrap}
+.toast{position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); background:var(--bar); color:var(--bar-ink); padding:10px 16px; border-radius:10px; font-weight:600; z-index:60; box-shadow:0 8px 24px rgba(0,0,0,.3)}
+@media (prefers-reduced-motion:no-preference){ .toast{animation:pop .18s ease-out} @keyframes pop{from{transform:translate(-50%,8px); opacity:0}} }
+</style>
+</head>
+<body>
+
+
+<header class="bar">
+  <div class="bar-in">
+    <div class="bar-top">
+      <div class="brand"><h1>Football Universe</h1><span class="season-pill" id="seasonPill">—</span></div>
+      <span class="save-state" id="saveState" aria-live="polite"></span>
+    </div>
+    <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+  </div>
+</header>
+<main class="wrap" id="app"><p class="muted">Loading…</p></main>
+
+<script>
+/* Football Universe engine: pure functions (no DOM). Used by the page and by the node tests. */
+var FUE = (function(){
+"use strict";
+var ROUNDS = ["Q1","Q2","Q3","PO"];
+var CUPS = ["cl","el","ecl","can"];
+var CUP_NAME = { cl:"Champions League", el:"Europa League", ecl:"Conference League", can:"Canera Cup" };
+var LOWER = { cl:"el", el:"ecl", ecl:"can", can:null };
+/* Which losers drop to which round of the cup below (Tymek's rules). */
+var DROP = {
+  cl:  { Q1:"Q2", Q2:"Q3", Q3:"PO", PO:"LP" },
+  el:  { Q2:"Q3", Q3:"PO", PO:"LP" },
+  ecl: { Q2:"Q3", Q3:"PO", PO:"LP" },
+  can: {}
+};
+
+/* ---------- random ---------- */
+function rng(seed){ // mulberry32; seed optional
+  var a = (seed === undefined ? Math.floor(Math.random() * 4294967296) : seed) >>> 0;
+  return function(){ a = (a + 0x6D2B79F5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
+}
+function shuffle(a, r){ for(var i = a.length - 1; i > 0; i--){ var j = Math.floor(r() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+/* ---------- access list ---------- */
+/* template: { cl:[{from,to,places,direct}], ... , target:{cl:36,...}, eps:2 }
+   Returns places per country rank for each cup: { cl:[{rank,places,direct}], ... } */
+function placesByRank(template, nCountries){
+  var out = {};
+  CUPS.forEach(function(c){
+    var arr = [];
+    for(var r = 1; r <= nCountries; r++){
+      var band = (template[c] || []).filter(function(b){ return r >= b.from && r <= b.to; })[0];
+      arr.push({ rank:r, places: band ? band.places : 0, direct: band ? Math.min(band.direct, band.places) : 0 });
+    }
+    out[c] = arr;
+  });
+  return out;
+}
+/* Solve one cup: how many entrants start at each round so the league phase lands exactly on target.
+   N = entrants, D = preferred direct places, inflow = clubs dropping in from the cup above {Q2,Q3,PO,LP}. */
+function solveCup(N, D, T, inflow){
+  inflow = inflow || {};
+  var p2 = inflow.Q2 || 0, p3 = inflow.Q3 || 0, pPO = inflow.PO || 0, pLP = inflow.LP || 0;
+  var best = null;
+  var order = [];
+  for(var d = 0; d <= Math.max(D, T) + 1; d++){ if(D - d >= 0) order.push(D - d); if(d && D + d <= Math.min(N, T)) order.push(D + d); }
+  for(var oi = 0; oi < order.length && !best; oi++){
+    var eLP = order[oi];
+    if(eLP > N || eLP + pLP > T) continue;
+    var W = T - eLP - pLP;          // winners needed from the play-off round
+    var fPO = 2 * W;
+    var rest = N - eLP;
+    for(var ePO = Math.min(rest, fPO - pPO); ePO >= 0 && !best; ePO--){
+      var w3 = fPO - pPO - ePO;      // Q3 winners needed
+      if(w3 < 0) continue;
+      var f3 = 2 * w3;
+      for(var e3 = Math.min(rest - ePO, f3 - p3); e3 >= 0 && !best; e3--){
+        var w2 = f3 - p3 - e3; if(w2 < 0) continue;
+        var f2 = 2 * w2;
+        for(var e2 = Math.min(rest - ePO - e3, f2 - p2); e2 >= 0 && !best; e2--){
+          var w1 = f2 - p2 - e2; if(w1 < 0) continue;
+          var e1 = rest - ePO - e3 - e2;
+          if(e1 !== 2 * w1) continue;
+          best = { LP:eLP, PO:ePO, Q3:e3, Q2:e2, Q1:e1, fields:{ Q1:e1, Q2:f2, Q3:f3, PO:fPO }, inflow:{ Q2:p2, Q3:p3, PO:pPO, LP:pLP }, direct:eLP, wanted:D };
+        }
+      }
+    }
+  }
+  return best;
+}
+/* Solve all four cups in order, passing losers down. counts = {cl:{N,D},...}, target = {cl:36,...} */
+function solveAll(counts, target){
+  var res = {}, inflow = { cl:{}, el:{}, ecl:{}, can:{} };
+  for(var i = 0; i < CUPS.length; i++){
+    var c = CUPS[i];
+    var s = solveCup(counts[c].N, counts[c].D, target[c], inflow[c]);
+    if(!s) return { ok:false, failed:c, partial:res };
+    res[c] = s;
+    var low = LOWER[c];
+    if(low){
+      Object.keys(DROP[c]).forEach(function(rd){
+        var losers = s.fields[rd] / 2, to = DROP[c][rd];
+        inflow[low][to] = (inflow[low][to] || 0) + losers;
+      });
+    }
+  }
+  return { ok:true, cups:res };
+}
+
+/* ---------- ties (two legs) ---------- */
+/* tie = { a, b, s:[a1,b1,b2,a2] | null, pen: winnerId|null } ; leg 1 at a's ground, leg 2 at b's */
+function tieWinner(t){
+  if(!t || !t.b) return t ? t.a : null;        // bye
+  if(!t.s || t.s.some(function(x){ return x === null || x === undefined; })) return null;
+  var A = t.s[0] + t.s[3], B = t.s[1] + t.s[2];
+  if(A > B) return t.a; if(B > A) return t.b;
+  return t.pen === t.a || t.pen === t.b ? t.pen : null;
+}
+function tieLoser(t){ var w = tieWinner(t); if(!w || !t.b) return null; return w === t.a ? t.b : t.a; }
+function tieLevel(t){ return !!(t && t.b && t.s && t.s.every(function(x){ return x !== null && x !== undefined; }) && t.s[0] + t.s[3] === t.s[1] + t.s[2]); }
+
+/* ---------- qualifying draw ---------- */
+/* teams: [{id, country, coef}] -> ties. Seeded half v unseeded half, no same-country ties when avoidable.
+   Odd field: the top seed gets a bye. */
+function drawRound(teams, r){
+  r = r || rng();
+  var list = teams.slice().sort(function(x, y){ return (y.coef - x.coef) || (x.id < y.id ? -1 : 1); });
+  var ties = [];
+  if(list.length % 2 === 1){ ties.push({ a:list[0].id, b:null, s:null, pen:null, bye:true }); list = list.slice(1); }
+  var half = list.length / 2, seeded = list.slice(0, half), unseeded = list.slice(half);
+  for(var attempt = 0; attempt < 400; attempt++){
+    var u = shuffle(unseeded.slice(), r), ok = true;
+    if(attempt < 300) for(var i = 0; i < half; i++) if(seeded[i].country && seeded[i].country === u[i].country){ ok = false; break; }
+    if(!ok) continue;
+    for(var k = 0; k < half; k++){
+      var homeFirst = r() < 0.5;
+      ties.push({ a: homeFirst ? seeded[k].id : u[k].id, b: homeFirst ? u[k].id : seeded[k].id, s:null, pen:null });
+    }
+    break;
+  }
+  return shuffle(ties, r);
+}
+
+/* ---------- league phase ---------- */
+/* template = [[mw, slotHome, slotAway], ...] with slots 0..n-1 where slot s is in pot floor(s/(n/4)).
+   teams = [{id, country, pot}] (pot 1..4, n/4 per pot). Places clubs into slots, avoiding same-country
+   meetings and more than 2 opponents from one country. Returns fixtures [[mw, hiTeamIndex, awTeamIndex, null, null]]. */
+function leagueDraw(teams, template, r){
+  r = r || rng();
+  var n = teams.length, per = n / 4;
+  var byPot = [[],[],[],[]];
+  teams.forEach(function(t, i){ byPot[t.pot - 1].push(i); });
+  if(byPot.some(function(p){ return p.length !== per; })) return null;
+  var opp = []; for(var s = 0; s < n; s++) opp.push([]);
+  template.forEach(function(m){ opp[m[1]].push(m[2]); opp[m[2]].push(m[1]); });
+  function cost(slotTeam){
+    var c = 0;
+    for(var s = 0; s < n; s++){
+      var me = teams[slotTeam[s]], cnt = {};
+      opp[s].forEach(function(o){
+        var t = teams[slotTeam[o]];
+        if(t.country && t.country === me.country) c += 10;
+        if(t.country){ cnt[t.country] = (cnt[t.country] || 0) + 1; if(cnt[t.country] > 2) c += 1; }
+      });
+    }
+    return c;
+  }
+  var best = null, bestCost = Infinity;
+  for(var restart = 0; restart < 30 && bestCost > 0; restart++){
+    var slotTeam = [];
+    for(var p = 0; p < 4; p++){ var ids = shuffle(byPot[p].slice(), r); for(var q = 0; q < per; q++) slotTeam[p * per + q] = ids[q]; }
+    var cur = cost(slotTeam);
+    for(var it = 0; it < 4000 && cur > 0; it++){
+      var pot = Math.floor(r() * 4), a = pot * per + Math.floor(r() * per), b = pot * per + Math.floor(r() * per);
+      if(a === b) continue;
+      var t = slotTeam[a]; slotTeam[a] = slotTeam[b]; slotTeam[b] = t;
+      var nc = cost(slotTeam);
+      if(nc <= cur || r() < 0.002){ cur = nc; } else { t = slotTeam[a]; slotTeam[a] = slotTeam[b]; slotTeam[b] = t; }
+    }
+    if(cur < bestCost){ bestCost = cur; best = slotTeam.slice(); }
+  }
+  var flip = r() < 0.5, mwOrder = shuffle(Array.from({ length: Math.max.apply(null, template.map(function(m){ return m[0]; })) }, function(_, i){ return i + 1; }), r);
+  var fx = template.map(function(m){
+    var h = best[m[1]], a = best[m[2]];
+    return [mwOrder[m[0] - 1], flip ? a : h, flip ? h : a, null, null];
+  });
+  fx.sort(function(x, y){ return x[0] - y[0]; });
+  return { fixtures:fx, conflicts:bestCost };
+}
+function leagueTable(teamIds, fixtures, nameOf){
+  var rows = teamIds.map(function(id, i){ return { i:i, id:id, P:0, W:0, D:0, L:0, GF:0, GA:0, GD:0, Pts:0, name: nameOf ? nameOf(id) : id }; });
+  fixtures.forEach(function(f){
+    if(f[3] === null || f[3] === undefined) return;
+    var h = rows[f[1]], a = rows[f[2]];
+    [[h, f[3], f[4]], [a, f[4], f[3]]].forEach(function(x){
+      var t = x[0]; t.P++; t.GF += x[1]; t.GA += x[2];
+      if(x[1] > x[2]) t.W++; else if(x[1] === x[2]) t.D++; else t.L++;
+    });
+  });
+  rows.forEach(function(t){ t.GD = t.GF - t.GA; t.Pts = 3 * t.W + t.D; });
+  rows.sort(function(x, y){ return (y.Pts - x.Pts) || (y.GD - x.GD) || (y.GF - x.GF) || (y.W - x.W) || String(x.name).toLowerCase().localeCompare(String(y.name).toLowerCase()); });
+  return rows;
+}
+
+/* ---------- knockout bracket (2024/25 format) ---------- */
+/* standings: ordered team ids (1st..). Play-off: 9/10 v 23/24, 11/12 v 21/22, 13/14 v 19/20, 15/16 v 17/18.
+   Last 16: 1/2 v winners of 15/16-17/18 tie, 3/4 v 13/14-19/20, 5/6 v 11/12-21/22, 7/8 v 9/10-23/24.
+   Seeded club plays the second leg at home. */
+function knockoutPlayoff(stand, r){
+  r = r || rng();
+  var pairs = [[9,10,23,24],[11,12,21,22],[13,14,19,20],[15,16,17,18]], ties = [];
+  pairs.forEach(function(p){
+    var seeds = r() < 0.5 ? [p[0], p[1]] : [p[1], p[0]], uns = r() < 0.5 ? [p[2], p[3]] : [p[3], p[2]];
+    for(var k = 0; k < 2; k++) ties.push({ a: stand[uns[k] - 1], b: stand[seeds[k] - 1], s:null, pen:null, seeded: seeds[k], slot: p.join("-") + "#" + k });
+  });
+  return ties;
+}
+function roundOf16(stand, poTies, r){
+  r = r || rng();
+  // which play-off ties feed which top-8 pair
+  var feed = { "1-2":"15-16-17-18", "3-4":"13-14-19-20", "5-6":"11-12-21-22", "7-8":"9-10-23-24" };
+  var ties = [];
+  [[1,2],[3,4],[5,6],[7,8]].forEach(function(pp){
+    var key = pp.join("-"), src = poTies.filter(function(t){ return t.slot.indexOf(feed[key] + "#") === 0; });
+    var winners = src.map(tieWinner);
+    var tops = r() < 0.5 ? [pp[0], pp[1]] : [pp[1], pp[0]];
+    for(var k = 0; k < 2; k++) ties.push({ a: winners[k], b: stand[tops[k] - 1], s:null, pen:null, path: key });
+  });
+  return ties;
+}
+function nextRound(prevTies){
+  var ties = [];
+  for(var i = 0; i < prevTies.length; i += 2) ties.push({ a: tieWinner(prevTies[i]), b: tieWinner(prevTies[i + 1]), s:null, pen:null });
+  return ties;
+}
+
+/* ---------- coefficients ---------- */
+/* points: win 2, draw 1; qualifying matches count half. Bonuses per cup (2024/25 rules); Canera at half value of ECL. */
+var BONUS = {
+  cl:  { part:6, perPlace:[0.25, 0.25], max:6, ko:1.5 },
+  el:  { part:0, perPlace:[0.25, 0.25], max:6, ko:1.0 },
+  ecl: { part:0, perPlace:[0.25, 0.125], max:4, ko:0.5 },
+  can: { part:0, perPlace:[0.125, 0.0625], max:2, ko:0.25 }
+};
+function matchPoints(gf, ga, qual){ var p = gf > ga ? 2 : gf === ga ? 1 : 0; return qual ? p / 2 : p; }
+/* league-phase position bonus: 1st gets max, falling by perPlace[0] for places 1-8 and perPlace[1] after, to 0. */
+function placeBonus(cup, pos, n){
+  var b = BONUS[cup];
+  if(cup === "cl" || cup === "el") return Math.max(0, b.max - (pos - 1) * b.perPlace[0] * (36 / n));
+  var v = pos <= 8 ? b.max - (pos - 1) * b.perPlace[0] : b.max - 7 * b.perPlace[0] - (pos - 8) * b.perPlace[1];
+  return Math.max(0, v);
+}
+function trunc3(x){ return Math.floor(x * 1000 + 1e-9) / 1000; }
+
+return { ROUNDS:ROUNDS, CUPS:CUPS, CUP_NAME:CUP_NAME, LOWER:LOWER, DROP:DROP, rng:rng, shuffle:shuffle,
+  placesByRank:placesByRank, solveCup:solveCup, solveAll:solveAll,
+  tieWinner:tieWinner, tieLoser:tieLoser, tieLevel:tieLevel, drawRound:drawRound,
+  leagueDraw:leagueDraw, leagueTable:leagueTable, knockoutPlayoff:knockoutPlayoff, roundOf16:roundOf16, nextRound:nextRound,
+  BONUS:BONUS, matchPoints:matchPoints, placeBonus:placeBonus, trunc3:trunc3 };
+})();
+if(typeof module !== "undefined") module.exports = FUE;
+
+var LP_TEMPLATES = {"36":[[1,8,35],[1,20,21],[1,0,1],[1,24,23],[1,32,14],[1,34,16],[1,5,4],[1,29,10],[1,17,9],[1,6,7],[1,3,13],[1,33,15],[1,26,25],[1,2,12],[1,31,22],[1,19,18],[1,30,11],[1,28,27],[2,16,25],[2,14,24],[2,1,11],[2,0,9],[2,17,35],[2,31,4],[2,7,8],[2,21,3],[2,30,20],[2,13,23],[2,10,19],[2,33,6],[2,32,5],[2,18,28],[2,27,26],[2,29,2],[2,15,34],[2,12,22],[3,32,31],[3,9,19],[3,7,35],[3,28,10],[3,3,4],[3,26,17],[3,20,1],[3,6,34],[3,12,21],[3,29,30],[3,14,13],[3,23,22],[3,16,15],[3,25,24],[3,27,0],[3,2,11],[3,5,33],[3,8,18],[4,23,33],[4,7,17],[4,4,13],[4,1,29],[4,15,14],[4,11,10],[4,6,25],[4,28,9],[4,8,0],[4,21,2],[4,16,26],[4,3,30],[4,19,20],[4,31,12],[4,22,32],[4,24,5],[4,35,34],[4,27,18],[5,9,10],[5,27,8],[5,12,11],[5,6,15],[5,34,7],[5,4,14],[5,1,19],[5,20,29],[5,28,0],[5,17,16],[5,22,21],[5,13,32],[5,25,35],[5,3,31],[5,5,23],[5,30,2],[5,24,33],[5,18,26],[6,15,5],[6,33,34],[6,11,20],[6,18,17],[6,26,8],[6,14,23],[6,4,32],[6,35,16],[6,10,1],[6,0,19],[6,24,6],[6,2,3],[6,22,13],[6,29,28],[6,30,12],[6,9,27],[6,25,7],[6,21,31],[7,11,29],[7,2,1],[7,5,6],[7,21,30],[7,35,26],[7,7,16],[7,13,31],[7,23,32],[7,17,27],[7,34,25],[7,19,28],[7,4,22],[7,10,20],[7,0,18],[7,9,8],[7,12,3],[7,15,24],[7,33,14],[8,23,4],[8,1,28],[8,35,27],[8,31,30],[8,20,2],[8,26,7],[8,32,33],[8,25,15],[8,19,29],[8,18,9],[8,16,6],[8,10,0],[8,8,17],[8,13,12],[8,22,3],[8,11,21],[8,34,24],[8,14,5]],"48":[[1,43,37],[1,20,14],[1,10,36],[1,8,46],[1,21,9],[1,29,28],[1,4,42],[1,5,41],[1,33,34],[1,1,15],[1,26,13],[1,12,38],[1,22,35],[1,2,3],[1,31,18],[1,25,39],[1,11,47],[1,40,27],[1,17,23],[1,19,7],[1,45,32],[1,44,6],[1,16,30],[1,24,0],[2,10,34],[2,13,27],[2,15,28],[2,18,19],[2,42,17],[2,1,38],[2,4,40],[2,44,20],[2,32,33],[2,0,14],[2,26,39],[2,37,23],[2,43,5],[2,30,29],[2,6,31],[2,46,22],[2,45,8],[2,9,3],[2,16,2],[2,35,36],[2,12,24],[2,11,25],[2,41,47],[2,7,21],[3,43,31],[3,23,10],[3,28,3],[3,6,30],[3,17,18],[3,47,46],[3,29,4],[3,20,33],[3,25,13],[3,15,14],[3,7,1],[3,32,44],[3,38,37],[3,21,45],[3,19,5],[3,22,9],[3,34,8],[3,27,2],[3,0,11],[3,39,40],[3,16,41],[3,26,12],[3,36,42],[3,24,35],[4,8,20],[4,27,1],[4,45,46],[4,34,22],[4,11,5],[4,4,16],[4,15,2],[4,37,36],[4,30,43],[4,7,31],[4,39,14],[4,38,25],[4,12,23],[4,28,40],[4,21,47],[4,17,41],[4,24,10],[4,19,33],[4,29,3],[4,32,26],[4,6,42],[4,13,0],[4,44,18],[4,35,9],[5,32,31],[5,45,7],[5,23,22],[5,13,14],[5,28,34],[5,8,44],[5,11,37],[5,47,9],[5,36,24],[5,19,43],[5,38,0],[5,1,39],[5,46,10],[5,6,20],[5,5,29],[5,12,18],[5,26,25],[5,4,41],[5,17,16],[5,42,30],[5,2,40],[5,15,3],[5,35,21],[5,33,27],[6,40,41],[6,9,8],[6,31,45],[6,22,10],[6,17,5],[6,20,32],[6,25,24],[6,7,6],[6,29,15],[6,11,12],[6,37,1],[6,44,43],[6,46,34],[6,4,30],[6,28,16],[6,23,36],[6,14,27],[6,13,19],[6,47,35],[6,2,38],[6,18,42],[6,26,0],[6,21,33],[6,3,39],[7,37,0],[7,27,39],[7,5,4],[7,19,45],[7,33,8],[7,11,35],[7,34,36],[7,14,26],[7,29,16],[7,46,32],[7,41,42],[7,38,44],[7,7,20],[7,15,21],[7,28,2],[7,9,10],[7,25,12],[7,43,17],[7,3,40],[7,18,6],[7,24,22],[7,31,30],[7,47,23],[7,1,13],[8,3,17],[8,10,47],[8,42,5],[8,6,32],[8,24,11],[8,27,28],[8,18,4],[8,46,20],[8,35,23],[8,40,16],[8,34,9],[8,36,12],[8,8,2],[8,0,25],[8,33,45],[8,1,26],[8,30,44],[8,41,29],[8,22,21],[8,37,13],[8,7,43],[8,31,19],[8,14,38],[8,39,15],[9,5,31],[9,17,29],[9,41,3],[9,30,18],[9,25,1],[9,23,24],[9,42,43],[9,20,19],[9,16,22],[9,34,21],[9,39,38],[9,33,7],[9,10,11],[9,35,37],[9,8,32],[9,36,47],[9,40,15],[9,2,14],[9,28,4],[9,45,44],[9,46,9],[9,27,26],[9,13,12],[9,0,6],[10,22,8],[10,33,46],[10,40,26],[10,12,37],[10,41,15],[10,18,43],[10,47,34],[10,6,5],[10,29,35],[10,9,45],[10,0,36],[10,25,31],[10,3,27],[10,14,28],[10,16,42],[10,1,2],[10,30,17],[10,44,19],[10,39,13],[10,38,24],[10,23,11],[10,20,21],[10,10,4],[10,32,7],[11,14,40],[11,30,24],[11,26,38],[11,43,6],[11,36,22],[11,0,1],[11,10,12],[11,13,11],[11,2,39],[11,9,23],[11,5,18],[11,15,27],[11,47,33],[11,3,16],[11,41,28],[11,31,44],[11,34,35],[11,4,17],[11,45,20],[11,42,29],[11,37,25],[11,32,19],[11,21,46],[11,8,7],[12,23,25],[12,3,4],[12,14,1],[12,31,17],[12,19,6],[12,24,37],[12,22,47],[12,2,26],[12,18,32],[12,27,41],[12,38,13],[12,12,0],[12,5,30],[12,44,7],[12,39,45],[12,42,28],[12,35,10],[12,16,15],[12,43,29],[12,21,8],[12,40,46],[12,36,11],[12,20,34],[12,9,33]]};
+</script>
+
+<script>
+(function(){
+"use strict";
+var DEFAULT_COEF = {"seasons":["2021/22","2022/23","2023/24","2024/25","2025/26"],"country":{"England":[21.0,23.0,17.375,29.464,28.68],"Italy":[15.714,22.357,21.0,21.875,19.0],"Spain":[18.428,16.571,16.062,23.892,22.093],"Germany":[16.214,17.125,19.357,18.421,21.785],"France":[18.416,12.583,16.25,17.928,18.321],"Portugal":[12.916,12.5,11.0,16.25,20.5],"Belgium":[6.6,14.2,14.4,15.65,11.4],"Netherlands":[19.2,13.5,10.0,15.25,9.979],"Turkey":[6.7,11.8,12.0,10.3,11.075],"Czech Republic":[6.7,6.75,13.5,10.55,11.025],"Poland":[4.625,7.75,6.875,11.75,15.75],"Greece":[8.0,2.125,11.4,12.687,14.2],"Norway":[7.625,5.75,8.0,11.812,8.05],"Denmark":[7.8,5.9,8.5,7.656,12.25],"Cyprus":[4.125,5.1,3.75,10.562,12.156],"Switzerland":[7.75,8.5,5.2,7.05,6.2],"Austria":[10.4,4.9,4.8,9.65,4.1],"Hungary":[2.75,5.875,4.5,6.625,7.437],"Scotland":[7.9,3.5,6.4,9.25,5.0],"Croatia":[6.0,3.375,5.875,5.875,7.031],"Sweden":[5.125,6.25,1.875,11.375,5.0],"Romania":[2.25,6.25,3.25,7.75,5.75],"Ukraine":[4.2,5.7,4.1,3.6,8.312],"Israel":[6.75,6.25,8.75,2.875,2.875],"Azerbaijan":[4.375,4.0,5.875,2.875,5.812],"Slovenia":[3.0,2.125,3.875,9.093,6.375],"Slovakia":[4.125,6.0,5.0,4.625,2.625],"Bulgaria":[3.375,4.5,4.375,3.625,5.187],"Serbia":[9.5,5.375,1.4,3.725,5.75],"Iceland":[1.5,3.0,3.833,4.562,3.625],"Republic of Ireland":[2.875,3.375,1.5,5.343,4.25],"Armenia":[1.875,2.375,2.25,4.375,4.187],"Kosovo":[2.333,2.875,3.0,2.0,3.781],"Bosnia and Herzegovina":[1.625,2.0,2.25,4.531,3.312],"Latvia":[2.625,2.75,1.625,3.875,2.0],"Finland":[3.75,2.625,1.75,2.25,3.625],"Kazakhstan":[2.875,1.125,3.125,3.0,3.625],"Moldova":[5.25,3.75,2.0,2.125,1.5],"Faroe Islands":[1.5,2.25,2.75,1.5,1.75],"Albania":[1.625,0.875,2.125,1.25,2.25],"North Macedonia":[0.625,1.625,1.5,0.666,3.343],"Belarus":[0.25,0.625,1.75,1.875,2.125],"Lithuania":[1.75,2.375,1.125,1.375,1.125],"Andorra":[1.5,0.666,1.666,1.0,2.0],"Malta":[1.875,2.625,1.5,1.0,2.0],"Gibraltar":[1.25,0.875,0.166,1.5,3.333],"Estonia":[3.666,1.166,0.125,1.625,1.625],"Northern Ireland":[1.625,1.25,1.125,1.5,1.75],"Georgia":[1.25,1.125,1.25,1.25,1.125],"Luxembourg":[1.25,1.125,2.25,1.25,0.75],"Montenegro":[0.75,1.0,1.333,2.5,1.0],"Wales":[1.5,1.166,0.625,2.0,0.333],"San Marino":[0.166,0.833,0.333,0.666,0.833]},"club":{"c89":{"2021/22":0.0,"2022/23":27.0,"2023/24":28.0,"2024/25":27.25,"2025/26":39.25},"c2":{"2021/22":0.0,"2022/23":17.0,"2023/24":22.0,"2024/25":36.0,"2025/26":44.0},"c84":{"2021/22":0.0,"2022/23":29.0,"2023/24":34.0,"2024/25":24.5,"2025/26":27.0},"c140":{"2021/22":0.0,"2022/23":19.0,"2023/24":23.0,"2024/25":33.5,"2025/26":37.5},"c115":{"2021/22":0.0,"2022/23":29.0,"2023/24":20.0,"2024/25":40.25,"2025/26":19.75},"c15":{"2021/22":0.0,"2022/23":33.0,"2023/24":28.0,"2024/25":14.75,"2025/26":22.75},"c75":{"2021/22":0.0,"2022/23":9.0,"2023/24":23.0,"2024/25":36.25,"2025/26":30.0},"c14":{"2021/22":0.0,"2022/23":19.0,"2023/24":20.0,"2024/25":29.5,"2025/26":28.5},"c90":{"2021/22":0.0,"2022/23":18.0,"2023/24":29.0,"2024/25":27.75,"2025/26":16.0},"c94":{"2021/22":0.0,"2022/23":19.0,"2023/24":29.0,"2024/25":23.25,"2025/26":19.75},"c70":{"2021/22":0.0,"2022/23":8.0,"2023/24":24.0,"2024/25":26.5,"2025/26":27.25},"c3":{"2021/22":0.0,"2022/23":0.0,"2023/24":17.0,"2024/25":30.25,"2025/26":35.75},"c122":{"2021/22":0.0,"2022/23":22.0,"2023/24":21.0,"2024/25":14.5,"2025/26":17.25},"c20":{"2021/22":0.0,"2022/23":18.0,"2023/24":0.0,"2024/25":32.25,"2025/26":26.75},"c366":{"2021/22":0.0,"2022/23":18.0,"2023/24":19.0,"2024/25":9.75,"2025/26":24.0},"c112":{"2021/22":0.0,"2022/23":20.0,"2023/24":22.0,"2024/25":20.0,"2025/26":14.25},"c373":{"2021/22":0.0,"2022/23":14.0,"2023/24":12.0,"2024/25":14.5,"2025/26":27.5},"c211":{"2021/22":0.0,"2022/23":17.0,"2023/24":21.0,"2024/25":15.75,"2025/26":14.5},"c6":{"2021/22":0.0,"2022/23":21.0,"2023/24":0.0,"2024/25":30.0,"2025/26":23.25},"c359":{"2021/22":0.0,"2022/23":25.0,"2023/24":14.0,"2024/25":18.75,"2025/26":12.25},"c83":{"2021/22":0.0,"2022/23":16.0,"2023/24":6.0,"2024/25":19.25,"2025/26":22.25},"c108":{"2021/22":0.0,"2022/23":0.0,"2023/24":28.0,"2024/25":21.0,"2025/26":19.0},"c157":{"2021/22":0.0,"2022/23":11.0,"2023/24":17.0,"2024/25":21.25,"2025/26":12.0},"c16":{"2021/22":0.0,"2022/23":19.0,"2023/24":7.0,"2024/25":32.5,"2025/26":0.0},"c107":{"2021/22":0.0,"2022/23":24.0,"2023/24":16.0,"2024/25":19.0,"2025/26":0.0}}};
+var DEFAULT_ACCESS = {"target":{"cl":36,"el":36,"ecl":36,"can":48},"eps":2,"template":{"cl":[{"from":1,"to":4,"places":4,"direct":4},{"from":5,"to":5,"places":3,"direct":3},{"from":6,"to":6,"places":2,"direct":2},{"from":7,"to":10,"places":2,"direct":1},{"from":11,"to":15,"places":2,"direct":0},{"from":16,"to":53,"places":1,"direct":0}],"el":[{"from":1,"to":5,"places":2,"direct":2},{"from":6,"to":6,"places":2,"direct":1},{"from":7,"to":12,"places":1,"direct":1},{"from":13,"to":30,"places":1,"direct":0}],"ecl":[{"from":1,"to":5,"places":1,"direct":0},{"from":6,"to":15,"places":2,"direct":0},{"from":16,"to":30,"places":2,"direct":0},{"from":31,"to":53,"places":2,"direct":0}],"can":[{"from":1,"to":10,"places":1,"direct":0},{"from":11,"to":30,"places":1,"direct":0},{"from":31,"to":53,"places":2,"direct":0}]}};
+var KEY = "footballUniverse.v1";
+var S = null;                     // all saved data
+var L = {};                       // league id -> league
+var REV = 0;                      // bumps on every change; used to refresh cached calculations
+var ui = { view:"leagues", leagueId:null, pane:"matches", round:{}, quick:true, q:"", highlight:null, ns:null,
+           cup:"cl", stage:null, clubId:null, back:null };
+var downloads = null;             // claude.ai preview only
+var storageOK = true, persisted = null, saveTimer = null;
+
+/* ---------------- helpers ---------------- */
+function h(tag, attrs){
+  var e = document.createElement(tag);
+  if(attrs) for(var k in attrs){
+    var v = attrs[k]; if(v === null || v === undefined || v === false) continue;
+    if(k === "class") e.className = v;
+    else if(k === "text") e.textContent = v;
+    else if(k.slice(0,2) === "on") e.addEventListener(k.slice(2), v);
+    else if(v === true) e.setAttribute(k, "");
+    else e.setAttribute(k, v);
+  }
+  for(var i = 2; i < arguments.length; i++) add(e, arguments[i]);
+  return e;
+}
+function add(e, c){
+  if(c === null || c === undefined || c === false) return;
+  if(Array.isArray(c)){ c.forEach(function(x){ add(e, x); }); return; }
+  e.appendChild(typeof c === "string" || typeof c === "number" ? document.createTextNode(String(c)) : c);
+}
+function fmt(n){ return Number(n).toLocaleString("en-GB"); }
+function fmt3(n){ return (Math.floor(n * 1000 + 1e-9) / 1000).toFixed(3); }
+function plural(n, one, many){ return fmt(n) + " " + (n === 1 ? one : (many || one + "s")); }
+function stamp(){ var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+function when(ts){
+  if(!ts) return "Never";
+  var d = new Date(ts);
+  return d.toLocaleDateString("en-GB", {day:"numeric", month:"short", year:"numeric"}) + ", " + d.toLocaleTimeString("en-GB", {hour:"2-digit", minute:"2-digit"});
+}
+function nextLabel(label){
+  var m = /^(\d{4})\/(\d{2})$/.exec(label || "");
+  if(!m) return label + " (next)";
+  var y = Number(m[1]) + 1;
+  return y + "/" + String((y + 1) % 100).padStart(2, "0");
+}
+function shortLabel(label){ var m = /^(\d{4})\/(\d{2})$/.exec(label || ""); return m ? m[1].slice(2) + "/" + m[2] : label; }
+function shuffle(a){ for(var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function normName(s){ return String(s || "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
+
+/* ---------------- storage ---------------- */
+function readStore(){
+  try { var s = localStorage.getItem(KEY); return s ? JSON.parse(s) : null; }
+  catch(e){ storageOK = false; return null; }
+}
+function writeNow(){
+  clearTimeout(saveTimer); saveTimer = null;
+  if(!S) return;
+  try {
+    localStorage.setItem(KEY, JSON.stringify(S));
+    storageOK = true;
+    setSaveState("Saved on this device", false);
+  } catch(e){
+    storageOK = false;
+    setSaveState("Not saved — device storage problem", true);
+    toast("Couldn't save. Save a backup now from the Backup tab.");
+  }
+}
+function save(){ REV++; setSaveState("Saving…", false); clearTimeout(saveTimer); saveTimer = setTimeout(writeNow, 400); }
+function setSaveState(t, bad){ var e = document.getElementById("saveState"); if(e){ e.textContent = t; e.className = "save-state" + (bad ? " bad" : ""); } }
+document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "hidden" && saveTimer) writeNow(); });
+window.addEventListener("pagehide", function(){ if(saveTimer) writeNow(); });
+function askPersist(){
+  try {
+    if(navigator.storage && navigator.storage.persisted){
+      navigator.storage.persisted().then(function(p){
+        if(p){ persisted = true; return; }
+        if(navigator.storage.persist) return navigator.storage.persist().then(function(r){ persisted = r; });
+      }).catch(function(){});
+    }
+  } catch(e){}
+}
+
+/* ---------------- data model ---------------- */
+function valid(d){
+  return d && d.app === "football-universe" && (d.version === 1 || d.version === 2) && Array.isArray(d.leagues) && d.clubs && d.season && d.rules;
+}
+/* bring an older file up to the current shape */
+function migrate(d){
+  if(!d.meta) d.meta = {};
+  if(d.version === 1){
+    d.coef = JSON.parse(JSON.stringify(DEFAULT_COEF));
+    d.access = JSON.parse(JSON.stringify(DEFAULT_ACCESS));
+    d.europe = null; d.euroHistory = []; d.version = 2;
+    ["Israel","Kosovo","North Macedonia"].forEach(function(n){
+      if(!d.countries.some(function(c){ return c.name === n; })) d.countries.push({ name:n, europe:{cl:0,el:0,ecl:0,can:0}, noLeague:true });
+    });
+  }
+  if(!d.euroHistory) d.euroHistory = [];
+  if(!d.access) d.access = JSON.parse(JSON.stringify(DEFAULT_ACCESS));
+  if(!d.coef) d.coef = JSON.parse(JSON.stringify(DEFAULT_COEF));
+  return d;
+}
+function index(){
+  L = {};
+  S.leagues.forEach(function(l){ L[l.id] = l; });
+}
+var COUNTRY_CODE = {"England":"ENG","Italy":"ITA","Spain":"ESP","Germany":"GER","France":"FRA","Portugal":"POR","Belgium":"BEL","Netherlands":"NED","Turkey":"TUR","Czech Republic":"CZE","Poland":"POL","Greece":"GRE","Norway":"NOR","Denmark":"DEN","Cyprus":"CYP","Switzerland":"SUI","Austria":"AUT","Hungary":"HUN","Scotland":"SCO","Croatia":"CRO","Sweden":"SWE","Romania":"ROU","Ukraine":"UKR","Israel":"ISR","Azerbaijan":"AZE","Slovenia":"SVN","Slovakia":"SVK","Bulgaria":"BUL","Serbia":"SRB","Iceland":"ISL","Republic of Ireland":"IRL","Armenia":"ARM","Kosovo":"KOS","Bosnia and Herzegovina":"BIH","Latvia":"LVA","Finland":"FIN","Kazakhstan":"KAZ","Moldova":"MDA","Faroe Islands":"FRO","Albania":"ALB","North Macedonia":"MKD","Belarus":"BLR","Lithuania":"LTU","Andorra":"AND","Malta":"MLT","Gibraltar":"GIB","Estonia":"EST","Northern Ireland":"NIR","Georgia":"GEO","Luxembourg":"LUX","Montenegro":"MNE","Wales":"WAL","San Marino":"SMR"};
+function countryCode(name){ return COUNTRY_CODE[name] || (name ? name.slice(0, 3).toUpperCase() : "?"); }
+/* club name with its country in brackets, used in the European cups: "Lech (POL)" */
+function euroName(id){ return clubName(id) + " (" + countryCode(clubCountry(id)) + ")"; }
+function clubName(id){ var c = S.clubs[id]; return c ? c.name : "?"; }
+function clubCountry(id){ var c = S.clubs[id]; return c ? c.country : ""; }
+function country(name){ for(var i = 0; i < S.countries.length; i++) if(S.countries[i].name === name) return S.countries[i]; return null; }
+function topLeague(countryName){
+  var best = null;
+  S.leagues.forEach(function(l){ if(l.country === countryName && (!best || l.tier < best.tier)) best = l; });
+  return best;
+}
+function upperBoundary(leagueId){
+  var b = S.rules.boundaries;
+  for(var k in b) if(b[k].lower === leagueId) return { upper:k, rule:b[k] };
+  return null;
+}
+function downCount(l){
+  var b = S.rules.boundaries[l.id];
+  if(b) return b.auto + 1;
+  var o = S.rules.out[l.id];
+  return typeof o === "number" ? o : 0;
+}
+function progress(l){
+  var p = 0; l.fixtures.forEach(function(f){ if(f[3] !== null) p++; });
+  return { played:p, total:l.fixtures.length };
+}
+function rounds(l){ var m = 0; l.fixtures.forEach(function(f){ if(f[0] > m) m = f[0]; }); return m; }
+function table(l){
+  var rows = l.clubs.map(function(id, slot){ return { slot:slot, id:id, name:clubName(id), P:0, W:0, D:0, L:0, GF:0, GA:0, GD:0, Pts:0, form:[] }; });
+  var order = l.fixtures.map(function(f, i){ return i; }).sort(function(a, b){ return (l.fixtures[a][0] - l.fixtures[b][0]) || (a - b); });
+  order.forEach(function(i){
+    var f = l.fixtures[i]; if(f[3] === null) return;
+    var hm = rows[f[1]], aw = rows[f[2]], hg = f[3], ag = f[4];
+    [[hm, hg, ag], [aw, ag, hg]].forEach(function(x){
+      var r = x[0], gf = x[1], ga = x[2];
+      r.P++; r.GF += gf; r.GA += ga;
+      if(gf > ga){ r.W++; r.form.push("W"); } else if(gf === ga){ r.D++; r.form.push("D"); } else { r.L++; r.form.push("L"); }
+    });
+  });
+  rows.forEach(function(r){ r.GD = r.GF - r.GA; r.Pts = r.W * 3 + r.D; r.form = r.form.slice(-5); });
+  rows.sort(function(a, b){
+    if(b.Pts !== a.Pts) return b.Pts - a.Pts;
+    if(b.GD !== a.GD) return b.GD - a.GD;
+    if(b.GF !== a.GF) return b.GF - a.GF;
+    var an = a.name.toLowerCase(), bn = b.name.toLowerCase();
+    return an < bn ? -1 : an > bn ? 1 : 0;
+  });
+  return rows;
+}
+/* colour band for each table position, plus the legend that explains them.
+   Top divisions show next season's European places for that country, worked out from the coefficient ranking. */
+function bands(l){
+  var n = l.clubs.length, pos = new Array(n + 1).fill(null), legend = [];
+  var down = downCount(l), ub = upperBoundary(l.id);
+  if(!ub){
+    var e = nextPlaces(l.country), p = 0;
+    var names = { cl:"Champions League", el:"Europa League", ecl:"Conference League", can:"Canera Cup" };
+    legend.push(["champ", "Champions"]);
+    ["cl","el","ecl","can"].forEach(function(k){
+      for(var q = 0; q < e[k]; q++){ p++; if(p <= n) pos[p] = k; }
+      if(e[k] > (k === "cl" ? 1 : 0)) legend.push([k, names[k] + " next season"]);
+    });
+  } else {
+    var r = ub.rule;
+    legend.push(["champ", "Champions, promoted"]);
+    for(var a = 2; a <= r.auto && a <= n; a++) pos[a] = "promo";
+    if(r.auto >= 2) legend.push(["promo", "Promoted"]);
+    for(var b = r.poFrom; b <= r.poTo && b <= n; b++) if(!pos[b]) pos[b] = "po";
+    if(r.poTo >= r.poFrom) legend.push(["po", "Promotion play-offs"]);
+  }
+  if(down > 0){
+    for(var d = Math.max(2, n - down + 1); d <= n; d++) pos[d] = "rel";
+    legend.push(["rel", S.rules.boundaries[l.id] ? "Relegated" : "Relegated out of the game"]);
+  }
+  pos[1] = "champ";
+  return { pos:pos, legend:legend };
+}
+
+/* ---------------- shell ---------------- */
+var TABS = [["leagues","Leagues"],["europe","Europe"],["coef","Coefficients"],["season","New season"],["history","History"],["backup","Backup"]];
+function renderTabs(){
+  var nav = document.getElementById("tabs"); nav.textContent = "";
+  if(!S) return;
+  var cur = ui.view === "league" ? "leagues" : ui.view === "club" ? (ui.back || "leagues") : ui.view;
+  TABS.forEach(function(t){
+    nav.appendChild(h("button", { class:"tab", type:"button", "aria-current": cur === t[0] ? "page" : null,
+      onclick:function(){ go(t[0]); } }, t[1]));
+  });
+  document.getElementById("seasonPill").textContent = S.season.label;
+}
+function go(view, opts){
+  ui.view = view;
+  if(opts) for(var k in opts) ui[k] = opts[k];
+  render();
+  window.scrollTo(0, 0);
+}
+function render(){
+  renderTabs();
+  var app = document.getElementById("app"); app.textContent = "";
+  if(!S){ app.appendChild(viewWelcome()); return; }
+  var v = { leagues:viewLeagues, league:viewLeague, europe:viewEurope, coef:viewCoef, season:viewSeason, history:viewHistory, backup:viewBackup, club:viewClub }[ui.view] || viewLeagues;
+  app.appendChild(v());
+}
+function toast(msg){
+  var t = h("div", { class:"toast", role:"status" }, msg);
+  document.body.appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 2600);
+}
+function dialog(o){
+  var back = h("div", { class:"dlg-back" });
+  function close(){ if(back.parentNode) back.parentNode.removeChild(back); document.removeEventListener("keydown", esc, true); }
+  function esc(ev){ if(ev.key === "Escape"){ ev.preventDefault(); close(); } }
+  var okBtn = h("button", { class:"btn " + (o.danger ? "btn-danger" : "btn-primary"), type:"button", onclick:function(){ close(); if(o.onOk) o.onOk(); } }, o.ok || "OK");
+  var box = h("div", { class:"dlg", role:"dialog", "aria-modal":"true", "aria-label":o.title || "Message" },
+    o.title ? h("h3", null, o.title) : null,
+    o.body,
+    h("div", { class:"dlg-actions" },
+      o.cancel === null ? null : h("button", { class:"btn", type:"button", onclick:close }, o.cancel || "Cancel"),
+      okBtn));
+  back.appendChild(box);
+  back.addEventListener("click", function(ev){ if(ev.target === back) close(); });
+  document.addEventListener("keydown", esc, true);
+  document.body.appendChild(back);
+  setTimeout(function(){ try{ okBtn.focus(); }catch(e){} }, 0);
+}
+function backupBanner(){
+  var n = S.meta.changesSinceBackup || 0;
+  if(n < 20) return null;
+  return h("div", { class:"banner" },
+    h("span", null, "You've entered " + plural(n, "result") + " since your last backup."),
+    h("button", { class:"btn btn-small", type:"button", onclick:function(){ go("backup"); } }, "Save a backup"));
+}
+function clubLink(id, text){
+  return h("button", { class:"clublink", type:"button", onclick:function(ev){ ev.stopPropagation(); openClub(id); } }, text || clubName(id));
+}
+/* a pair of score tiles for one match; onCommit(hg, ag) gets numbers or nulls */
+function scoreTiles(idBase, hv, av, labels, tiles, onCommit){
+  function mk(suffix, v, label){
+    return h("input", { class:"tile", id:idBase + "-" + suffix, type:"text", inputmode:"numeric", pattern:"[0-9]*", maxlength:"2", autocomplete:"off",
+      placeholder:"–", "aria-label":label, value: v === null || v === undefined ? "" : String(v) });
+  }
+  var a = mk("h", hv, labels[0]), b = mk("a", av, labels[1]);
+  function commit(){
+    var x = a.value.replace(/\D/g, ""), y = b.value.replace(/\D/g, "");
+    if(a.value !== x) a.value = x; if(b.value !== y) b.value = y;
+    onCommit(x === "" ? null : Number(x), y === "" ? null : Number(y), x, y);
+  }
+  [a, b].forEach(function(inp){
+    inp.addEventListener("focus", function(){ try{ inp.select(); }catch(e){} });
+    inp.addEventListener("input", function(){
+      commit();
+      if(ui.quick && inp.value.length >= 1){
+        var i = tiles.indexOf(inp);
+        if(i >= 0 && i + 1 < tiles.length) tiles[i + 1].focus(); else inp.blur();
+      }
+    });
+    inp.addEventListener("change", commit);
+    inp.addEventListener("keydown", function(ev){
+      if(ev.key === "Enter"){ ev.preventDefault(); var i = tiles.indexOf(inp); if(i + 1 < tiles.length) tiles[i + 1].focus(); else inp.blur(); }
+    });
+    tiles.push(inp);
+  });
+  return { home:a, away:b, el:h("span", { class:"score" }, a, h("span", { class:"dash" }, "–"), b) };
+}
+function quickToggle(){
+  var qc = h("input", { type:"checkbox", id:"quick", checked: ui.quick, onchange:function(){ ui.quick = qc.checked; } });
+  return h("label", { class:"quick", for:"quick" }, qc, "Jump to the next box after each score (untick for scores of 10 or more)");
+}
+
+/* ---------------- welcome (no data yet) ---------------- */
+function viewWelcome(){
+  return h("section", { class:"welcome" },
+    h("p", { class:"eyebrow" }, "First time on this device"),
+    h("h2", null, "Load your football universe"),
+    h("p", { class:"lede" }, "Choose the starting file (football-universe-start.json) or one of your backups. Everything you load is saved on this device."),
+    h("p", null, fileButton("Choose file", loadFromFile)),
+    storageOK ? null : h("p", { class:"warn-line" }, "This browser is blocking storage, so nothing can be saved here. Turn off private browsing and try again."));
+}
+
+/* ---------------- leagues list ---------------- */
+function viewLeagues(){
+  var tp = 0, tt = 0; S.leagues.forEach(function(l){ var p = progress(l); tp += p.played; tt += p.total; });
+  var wrap = h("section");
+  wrap.appendChild(h("div", { class:"page-head" },
+    h("div", null, h("p", { class:"eyebrow" }, "Season " + S.season.label), h("h2", null, "Leagues")),
+    h("p", { class:"totals num" }, plural(S.leagues.length, "league") + " · " + plural(Object.keys(clubsInPlay()).length, "club") + " · " + fmt(tp) + " of " + fmt(tt) + " matches played")));
+  add(wrap, backupBanner());
+  var results = h("div", { class:"results", id:"results" });
+  var input = h("input", { class:"field", type:"search", id:"search", placeholder:"Find a club or league", "aria-label":"Find a club or league", value:ui.q, autocomplete:"off" });
+  input.addEventListener("input", function(){ ui.q = input.value; fillResults(results); });
+  wrap.appendChild(h("div", { class:"search-row" }, input));
+  wrap.appendChild(results);
+  fillResults(results);
+  var byCountry = {};
+  S.leagues.forEach(function(l){ (byCountry[l.country] = byCountry[l.country] || []).push(l); });
+  var order = liveRanking().map(function(r){ return r.name; }).filter(function(n){ return byCountry[n]; });
+  Object.keys(byCountry).forEach(function(n){ if(order.indexOf(n) < 0) order.push(n); });
+  order.forEach(function(cn){
+    var ls = byCountry[cn].slice().sort(function(a, b){ return a.tier - b.tier; });
+    var e = nextPlaces(cn);
+    wrap.appendChild(h("div", { class:"country" },
+      h("h3", null, cn, h("span", { class:"eu" }, "Next season: " + e.cl + " CL · " + e.el + " EL · " + e.ecl + " ECL · " + e.can + " Canera")),
+      h("div", { class:"league-grid" }, ls.map(leagueCard))));
+  });
+  return wrap;
+}
+function clubsInPlay(){ var m = {}; S.leagues.forEach(function(l){ l.clubs.forEach(function(id){ m[id] = l.id; }); }); return m; }
+function leagueCard(l){
+  var p = progress(l), t = table(l), lead = t[0];
+  var pct = p.total ? Math.round(p.played / p.total * 100) : 0;
+  return h("button", { class:"lcard", type:"button", onclick:function(){ openLeague(l.id); } },
+    h("span", { class:"tier" }, "Tier " + l.tier),
+    h("span", { class:"name" }, l.name),
+    h("span", { class:"leader" }, p.played ? "Top: " + lead.name + " · " + lead.Pts + " pts" : "No matches played yet"),
+    h("span", { class:"meter-row num" }, h("span", { class:"meter" }, h("i", { style:"width:" + pct + "%" })), p.played + "/" + p.total));
+}
+function fillResults(box){
+  box.textContent = "";
+  var q = ui.q.trim().toLowerCase(); if(q.length < 2) return;
+  var where = clubsInPlay(), hits = [];
+  Object.keys(S.clubs).forEach(function(id){
+    var c = S.clubs[id];
+    if(!where[id] && !(c.noLeague && inEuropeNow(id))) return;
+    if(c.name.toLowerCase().indexOf(q) >= 0 || normName(c.name).indexOf(normName(q)) >= 0) hits.push([c.name, id, where[id] || null]);
+  });
+  hits.sort(function(a, b){ return a[0].localeCompare(b[0]); });
+  var lhits = S.leagues.filter(function(l){ return l.name.toLowerCase().indexOf(q) >= 0 || l.country.toLowerCase().indexOf(q) >= 0; });
+  lhits.slice(0, 8).forEach(function(l){
+    box.appendChild(h("button", { class:"hit", type:"button", onclick:function(){ openLeague(l.id); } }, h("span", null, l.name), h("span", null, l.country + " · Tier " + l.tier)));
+  });
+  hits.slice(0, 20).forEach(function(x){
+    var l = x[2] ? L[x[2]] : null;
+    box.appendChild(h("button", { class:"hit", type:"button", onclick:function(){ openClub(x[1]); } },
+      h("span", null, x[0]), h("span", null, l ? l.name + " · " + l.country : clubCountry(x[1]) + " · European cups only")));
+  });
+  if(!hits.length && !lhits.length) box.appendChild(h("p", { class:"muted" }, "No club or league matches “" + ui.q.trim() + "”."));
+}
+
+/* ---------------- one league ---------------- */
+function openLeague(id, highlightClub){
+  ui.leagueId = id; ui.highlight = highlightClub || null;
+  if(highlightClub) ui.pane = "table";
+  go("league");
+}
+function firstOpenRound(fixtures){
+  var m = 0, best = null;
+  fixtures.forEach(function(f){ if(f[0] > m) m = f[0]; if(f[3] === null && (best === null || f[0] < best)) best = f[0]; });
+  return best === null ? m : best;
+}
+function viewLeague(){
+  var l = L[ui.leagueId]; if(!l) return viewLeagues();
+  var p = progress(l);
+  var wrap = h("section");
+  wrap.appendChild(h("button", { class:"linkish back", type:"button", onclick:function(){ go("leagues"); } }, "← All leagues"));
+  wrap.appendChild(h("div", { class:"page-head" },
+    h("div", null, h("p", { class:"eyebrow" }, l.country + " · Tier " + l.tier), h("h2", null, l.name)),
+    h("p", { class:"totals num", id:"lprog" }, p.played + " of " + p.total + " matches played")));
+  add(wrap, backupBanner());
+  var body = h("div", { class:"lbody", "data-pane":ui.pane });
+  wrap.appendChild(paneSwitch(body, true));
+  var tablePane = h("div", { class:"pane-table" });
+  var matchPane = h("div", { class:"pane-matches" });
+  var clubPane = h("div", { class:"pane-clubs" });
+  body.appendChild(tablePane); body.appendChild(matchPane); body.appendChild(clubPane);
+  wrap.appendChild(body);
+  drawTable(l, tablePane);
+  matchesPanel({
+    key:l.id, clubs:l.clubs, fixtures:l.fixtures, pane:matchPane,
+    onChange:function(){
+      drawTable(l, tablePane);
+      var pr = progress(l), e = document.getElementById("lprog"); if(e) e.textContent = pr.played + " of " + pr.total + " matches played";
+    }
+  });
+  drawClubs(l, clubPane, tablePane);
+  return wrap;
+}
+function paneSwitch(body, withClubs){
+  var opts = [["matches","Matches",""],["table","Table","only-narrow"]];
+  if(withClubs) opts.push(["clubs","Clubs",""]);
+  if(!withClubs && ui.pane === "clubs") ui.pane = "matches";
+  body.setAttribute("data-pane", ui.pane);
+  var seg = h("div", { class:"seg" + (withClubs ? "" : " seg-narrow"), role:"group", "aria-label":"Show" });
+  opts.forEach(function(s, i){
+    seg.appendChild(h("button", { type:"button", class:s[2], "aria-pressed": ui.pane === s[0] ? "true" : "false", onclick:function(){
+      ui.pane = s[0]; body.setAttribute("data-pane", s[0]);
+      Array.prototype.forEach.call(seg.children, function(b, j){ b.setAttribute("aria-pressed", j === i ? "true" : "false"); });
+    } }, s[1]));
+  });
+  return seg;
+}
+function drawTable(l, pane){
+  pane.textContent = "";
+  var t = table(l), b = bands(l);
+  pane.appendChild(h("p", { class:"panel-title" }, "Table"));
+  var tb = h("tbody");
+  t.forEach(function(r, i){
+    var pos = i + 1, band = b.pos[pos];
+    tb.appendChild(h("tr", { class:(band ? "band-" + band : "") + (ui.highlight === r.id ? " hl" : "") },
+      h("td", { class:"pos" }, pos),
+      h("td", { class:"club" }, clubLink(r.id, r.name)),
+      h("td", null, r.P), h("td", { class:"wide" }, r.W), h("td", { class:"wide" }, r.D), h("td", { class:"wide" }, r.L),
+      h("td", { class:"wide" }, r.GF), h("td", { class:"wide" }, r.GA),
+      h("td", null, (r.GD > 0 ? "+" : "") + r.GD),
+      h("td", { class:"pts" }, r.Pts),
+      h("td", { class:"wide" }, h("span", { class:"form", "aria-label":"Last five: " + r.form.join(" ") }, r.form.map(function(x){ return h("b", { class:x }, x); })))));
+  });
+  pane.appendChild(h("div", { class:"table-wrap" },
+    h("table", { class:"lt" },
+      h("thead", null, h("tr", null,
+        h("th", null, "Pos"), h("th", { class:"club" }, "Club"), h("th", null, "P"),
+        h("th", { class:"wide" }, "W"), h("th", { class:"wide" }, "D"), h("th", { class:"wide" }, "L"),
+        h("th", { class:"wide" }, "GF"), h("th", { class:"wide" }, "GA"), h("th", null, "GD"), h("th", null, "Pts"), h("th", { class:"wide" }, "Form"))),
+      tb)));
+  pane.appendChild(h("div", { class:"legend" }, b.legend.map(function(x){ return h("span", null, h("i", { style:"background:var(--b-" + x[0] + ")" }), x[1]); })));
+  pane.appendChild(h("p", { class:"tiebreak" }, "Level on points: goal difference first, then goals scored."));
+}
+/* matchweek-by-matchweek score entry. host = {key, clubs, fixtures, pane, onChange} */
+function matchesPanel(host){
+  var l = host, pane = host.pane;
+  function draw(){
+    pane.textContent = "";
+    var R = 0; l.fixtures.forEach(function(f){ if(f[0] > R) R = f[0]; });
+    if(!ui.round[l.key]) ui.round[l.key] = firstOpenRound(l.fixtures);
+    var r = Math.min(Math.max(1, ui.round[l.key] || 1), R); ui.round[l.key] = r;
+    var list = []; l.fixtures.forEach(function(f, i){ if(f[0] === r) list.push(i); });
+    var sub = h("span", { class:"sub num" });
+    function setSub(){ var c = 0; list.forEach(function(i){ if(l.fixtures[i][3] !== null) c++; }); sub.textContent = c + " of " + list.length + " played"; }
+    setSub();
+    var sel = h("select", { "aria-label":"Matchweek", id:"mw-" + l.key, onchange:function(){ ui.round[l.key] = Number(sel.value); draw(); } });
+    for(var k = 1; k <= R; k++) sel.appendChild(h("option", { value:k, selected: k === r }, "Matchweek " + k));
+    pane.appendChild(h("p", { class:"panel-title" }, "Matches"));
+    pane.appendChild(h("div", { class:"roundnav" },
+      h("button", { class:"arrow", type:"button", "aria-label":"Previous matchweek", disabled: r <= 1, onclick:function(){ ui.round[l.key] = r - 1; draw(); } }, "‹"),
+      h("div", { class:"mid" }, sel, sub),
+      h("button", { class:"arrow", type:"button", "aria-label":"Next matchweek", disabled: r >= R, onclick:function(){ ui.round[l.key] = r + 1; draw(); } }, "›")));
+    pane.appendChild(quickToggle());
+    var box = h("div", { class:"matches" }), tiles = [];
+    list.forEach(function(i){
+      var f = l.fixtures[i], hid = l.clubs[f[1]], aid = l.clubs[f[2]];
+      var row = h("div", { class:"match" });
+      var lab = host.label || clubName;
+      var hn = h("span", { class:"team home" }, clubLink(hid, lab(hid))), an = h("span", { class:"team away" }, clubLink(aid, lab(aid)));
+      var clr = h("button", { class:"clear", type:"button", "aria-label":"Clear this score", title:"Clear score" }, "×");
+      var note = h("span", { class:"half-note", hidden:true }, "Enter both scores");
+      var st = scoreTiles("s-" + l.key + "-" + i, f[3], f[4], [clubName(hid) + " goals", clubName(aid) + " goals"], tiles, function(hg, ag){
+        var g = l.fixtures[i], before = g[3] === null ? "" : g[3] + "-" + g[4];
+        if(hg !== null && ag !== null){ g[3] = hg; g[4] = ag; } else { g[3] = null; g[4] = null; }
+        var after = g[3] === null ? "" : g[3] + "-" + g[4];
+        if(before !== after){
+          if(after !== "") S.meta.changesSinceBackup = (S.meta.changesSinceBackup || 0) + 1;
+          save(); setSub(); if(host.onChange) host.onChange();
+        }
+        paint();
+      });
+      function paint(){
+        var g = l.fixtures[i], hv = st.home.value, av = st.away.value, half = (hv === "") !== (av === "");
+        row.className = "match" + (g[3] !== null ? " done" : "") + (half ? " half" : "");
+        note.hidden = !half; clr.hidden = hv === "" && av === "";
+        hn.className = "team home" + (g[3] !== null ? (g[3] > g[4] ? " win" : g[3] < g[4] ? " lose" : "") : "");
+        an.className = "team away" + (g[3] !== null ? (g[4] > g[3] ? " win" : g[4] < g[3] ? " lose" : "") : "");
+      }
+      clr.addEventListener("click", function(){ st.home.value = ""; st.away.value = ""; st.home.dispatchEvent(new Event("change")); });
+      row.appendChild(hn); row.appendChild(st.el); row.appendChild(an); row.appendChild(clr); row.appendChild(note);
+      paint();
+      box.appendChild(row);
+    });
+    pane.appendChild(box);
+    if(r < R) pane.appendChild(h("div", { class:"next-round" }, h("button", { class:"btn", type:"button", onclick:function(){ ui.round[l.key] = r + 1; draw(); window.scrollTo(0, 0); } }, "Next matchweek ›")));
+  }
+  draw();
+}
+function drawClubs(l, pane, tablePane){
+  pane.textContent = "";
+  pane.appendChild(h("p", { class:"panel-title" }, "Clubs"));
+  pane.appendChild(h("p", { class:"lede" }, "Change a name and it changes everywhere, including the European cups. Past seasons in History keep the old name."));
+  var grid = h("div", { class:"club-list", style:"margin-top:12px" });
+  l.clubs.slice().sort(function(a, b){ return clubName(a).localeCompare(clubName(b)); }).forEach(function(id){
+    var inp = h("input", { class:"field", id:"rename-" + id, value:clubName(id), autocomplete:"off" });
+    inp.addEventListener("change", function(){
+      var v = inp.value.trim();
+      if(!v){ inp.value = clubName(id); return; }
+      if(v === clubName(id)) return;
+      S.clubs[id].name = v; save(); drawTable(l, tablePane); toast("Renamed to " + v);
+    });
+    grid.appendChild(h("label", { for:"rename-" + id }, "Club name", inp));
+  });
+  pane.appendChild(grid);
+}
+
+/* ---------------- calculated values, refreshed whenever data changes ---------------- */
+var memo = { rev:-1 };
+function cached(key, fn){ if(memo.rev !== REV) memo = { rev:REV }; if(!(key in memo)) memo[key] = fn(); return memo[key]; }
+
+/* ---------------- coefficient points for the season being played ---------------- */
+function legPoints(t, qual, mul, pt, pa){
+  pa(t.a); pa(t.b);
+  if(!t.b || !t.s) return;
+  if(t.s[0] != null && t.s[1] != null){ pt(t.a, FUE.matchPoints(t.s[0], t.s[1], qual) * mul); pt(t.b, FUE.matchPoints(t.s[1], t.s[0], qual) * mul); }
+  if(t.s[2] != null && t.s[3] != null){ pt(t.b, FUE.matchPoints(t.s[2], t.s[3], qual) * mul); pt(t.a, FUE.matchPoints(t.s[3], t.s[2], qual) * mul); }
+}
+function seasonPoints(){
+  return cached("sp", function(){
+    var E = S.europe, club = {}, part = {};
+    function pt(id, p){ if(id) club[id] = (club[id] || 0) + p; }
+    function pa(id){ if(id) part[id] = true; }
+    if(E) FUE.CUPS.forEach(function(k){
+      var cup = E.cups[k]; if(!cup) return;
+      var mul = k === "can" ? 0.5 : 1, B = FUE.BONUS[k];
+      FUE.ROUNDS.forEach(function(rd){ var r = cup.rounds[rd]; if(r && r.ties) r.ties.forEach(function(t){ legPoints(t, true, mul, pt, pa); }); });
+      if(cup.lp){
+        cup.lp.teams.forEach(function(id){ pa(id); pt(id, B.part); });
+        cup.lp.fixtures.forEach(function(f){
+          if(f[3] === null) return;
+          pt(cup.lp.teams[f[1]], FUE.matchPoints(f[3], f[4], false) * mul);
+          pt(cup.lp.teams[f[2]], FUE.matchPoints(f[4], f[3], false) * mul);
+        });
+        if(lpComplete(k)) lpStandings(k).forEach(function(r, i, all){ pt(r.id, FUE.placeBonus(k, i + 1, all.length)); });
+      }
+      var ko = cup.ko || {};
+      ["po","r16","qf","sf"].forEach(function(s){
+        (ko[s] || []).forEach(function(t){ legPoints(t, false, mul, pt, pa); if(s !== "po"){ pt(t.a, B.ko); pt(t.b, B.ko); } });
+      });
+      if(ko.final){
+        var f = ko.final; pa(f.a); pa(f.b); pt(f.a, B.ko); pt(f.b, B.ko);
+        if(f.s && f.s[0] != null && f.s[1] != null){ pt(f.a, FUE.matchPoints(f.s[0], f.s[1], false) * mul); pt(f.b, FUE.matchPoints(f.s[1], f.s[0], false) * mul); }
+      }
+    });
+    var country = {};
+    Object.keys(part).forEach(function(id){
+      var c = clubCountry(id); if(!c) return;
+      var o = country[c] = country[c] || { pts:0, n:0 };
+      o.pts += club[id] || 0; o.n++;
+    });
+    Object.keys(country).forEach(function(c){ var o = country[c]; o.value = FUE.trunc3(o.pts / o.n); });
+    return { club:club, country:country, part:part };
+  });
+}
+
+/* ---------------- country ranking ---------------- */
+function coefValues(name){ return (S.coef.country[name] || [0,0,0,0,0]).slice(-5); }
+function sum(a){ return a.reduce(function(s, x){ return s + x; }, 0); }
+function startRanking(){
+  return cached("sr", function(){
+    return S.countries.map(function(c){ var v = coefValues(c.name); return { name:c.name, vals:v, total:FUE.trunc3(sum(v)) }; })
+      .sort(function(a, b){ return (b.total - a.total) || a.name.localeCompare(b.name); });
+  });
+}
+function liveRanking(){
+  return cached("lr", function(){
+    var sp = seasonPoints(), start = startRanking(), startPos = {};
+    start.forEach(function(r, i){ startPos[r.name] = i + 1; });
+    var rows = S.countries.map(function(c){
+      var v = coefValues(c.name).slice(1), cur = sp.country[c.name] ? sp.country[c.name].value : 0;
+      return { name:c.name, vals:v, cur:cur, total:FUE.trunc3(sum(v) + cur), startRank:startPos[c.name], noLeague:!!c.noLeague, clubs: sp.country[c.name] ? sp.country[c.name].n : 0 };
+    }).sort(function(a, b){ return (b.total - a.total) || (b.cur - a.cur) || a.name.localeCompare(b.name); });
+    rows.forEach(function(r, i){ r.rank = i + 1; });
+    return rows;
+  });
+}
+function epsFrom(values){
+  var n = S.access.eps || 0, list = Object.keys(values).filter(function(k){ return values[k] > 0; })
+    .sort(function(a, b){ return (values[b] - values[a]) || a.localeCompare(b); });
+  var out = {}; list.slice(0, n).forEach(function(k){ out[k] = true; }); return out;
+}
+
+/* ---------------- access list: who goes where ---------------- */
+function computeAccess(order, eps){
+  var tpl = S.access.template, pr = FUE.placesByRank(tpl, order.length);
+  var byCountry = {}, counts = {};
+  FUE.CUPS.forEach(function(k){ counts[k] = { N:0, D:0 }; });
+  order.forEach(function(name, i){
+    var o = byCountry[name] = { rank:i + 1 };
+    FUE.CUPS.forEach(function(k){ o[k] = { places:pr[k][i].places, direct:pr[k][i].direct }; });
+    if(eps && eps[name]){ o.cl.places++; o.cl.direct++; o.eps = true; }
+    FUE.CUPS.forEach(function(k){ counts[k].N += o[k].places; counts[k].D += o[k].direct; });
+  });
+  return { order:order, byCountry:byCountry, counts:counts, plan:FUE.solveAll(counts, S.access.target) };
+}
+function liveAccess(){
+  return cached("la", function(){
+    var lr = liveRanking(), cur = {};
+    lr.forEach(function(r){ cur[r.name] = r.cur; });
+    return computeAccess(lr.map(function(r){ return r.name; }), epsFrom(cur));
+  });
+}
+function nextPlaces(name){
+  var o = liveAccess().byCountry[name];
+  return o ? { cl:o.cl.places, el:o.el.places, ecl:o.ecl.places, can:o.can.places, eps:!!o.eps } : { cl:0, el:0, ecl:0, can:0 };
+}
+
+/* ---------------- club coefficients ---------------- */
+function clubCoefStart(id){
+  var own = 0, c = S.coef.club[id];
+  if(c) S.coef.seasons.slice(-5).forEach(function(s){ own += c[s] || 0; });
+  var ctry = clubCountry(id), floor = ctry ? 0.2 * sum(coefValues(ctry)) : 0;
+  return Math.max(own, floor);
+}
+function clubCoefLive(id){
+  var own = 0, c = S.coef.club[id];
+  if(c) S.coef.seasons.slice(-4).forEach(function(s){ own += c[s] || 0; });
+  own += seasonPoints().club[id] || 0;
+  var ctry = clubCountry(id), row = null;
+  liveRanking().forEach(function(r){ if(r.name === ctry) row = r; });
+  return Math.max(own, row ? 0.2 * row.total : 0);
+}
+
+/* ---------------- coefficients page ---------------- */
+function placeChips(p){
+  return h("span", { class:"chips" },
+    p.cl ? h("span", { class:"chip cl", title:"Champions League" }, "CL " + p.cl) : null,
+    p.el ? h("span", { class:"chip el", title:"Europa League" }, "EL " + p.el) : null,
+    p.ecl ? h("span", { class:"chip ecl", title:"Conference League" }, "ECL " + p.ecl) : null,
+    p.can ? h("span", { class:"chip can", title:"Canera Cup" }, "CAN " + p.can) : null);
+}
+function viewCoef(){
+  var wrap = h("section");
+  var labels = S.coef.seasons.slice(-4).concat([S.europe ? S.europe.season : S.season.label]);
+  wrap.appendChild(h("div", { class:"page-head" }, h("div", null, h("p", { class:"eyebrow" }, "Season " + S.season.label), h("h2", null, "Coefficients"),
+    h("p", { class:"lede" }, "Each country's points from the last five seasons. This season's column grows with every European result Tymek enters, and the ranking decides next season's European places."))));
+  var lr = liveRanking(), acc = liveAccess();
+  var tb = h("tbody");
+  lr.forEach(function(r){
+    var move = r.startRank - r.rank, p = acc.byCountry[r.name];
+    tb.appendChild(h("tr", null,
+      h("td", { class:"pos" }, r.rank),
+      h("td", null, move > 0 ? h("span", { class:"up", title:"Up " + move + " since the season started" }, "▲" + move) : move < 0 ? h("span", { class:"down", title:"Down " + (-move) + " since the season started" }, "▼" + (-move)) : h("span", { class:"faint" }, "–")),
+      h("td", { class:"club" }, r.name, r.noLeague ? h("span", { class:"flag" }, " · no league in the game") : null),
+      r.vals.map(function(v){ return h("td", { class:"wide" }, fmt3(v)); }),
+      h("td", { class:"cur" }, fmt3(r.cur)),
+      h("td", { class:"pts" }, fmt3(r.total)),
+      h("td", null, placeChips({ cl:p.cl.places, el:p.el.places, ecl:p.ecl.places, can:p.can.places }), p.eps ? h("span", { class:"flag", title:"One of the two best countries this season" }, " +1 CL best season") : null)));
+  });
+  wrap.appendChild(h("p", { class:"panel-title" }, "Country ranking"));
+  wrap.appendChild(h("div", { class:"table-wrap" }, h("table", { class:"lt coef-table" },
+    h("thead", null, h("tr", null, h("th", null, "#"), h("th", null, ""), h("th", { class:"club" }, "Country"),
+      labels.slice(0, 4).map(function(s){ return h("th", { class:"wide" }, shortLabel(s)); }),
+      h("th", { class:"cur" }, shortLabel(labels[4]) + " live"), h("th", null, "Total"), h("th", null, "Next season"))),
+    tb)));
+  wrap.appendChild(h("p", { class:"tiebreak" }, "A country's season score is all its clubs' points divided by how many of its clubs played in Europe. Wins 2, draws 1; qualifying matches count half; Canera Cup matches count half again. Champions League clubs get 6 for reaching the league phase. Every cup gives bonus points for league-phase position and each knockout round reached. The two best countries this season get one extra Champions League place."));
+
+  // clubs
+  var ids = {};
+  Object.keys(S.coef.club).forEach(function(id){ ids[id] = 1; });
+  Object.keys(seasonPoints().club).forEach(function(id){ ids[id] = 1; });
+  var clubs = Object.keys(ids).filter(function(id){ return S.clubs[id]; }).map(function(id){ return { id:id, live:clubCoefLive(id), cur:seasonPoints().club[id] || 0 }; })
+    .sort(function(a, b){ return b.live - a.live; }).slice(0, 40);
+  wrap.appendChild(h("p", { class:"panel-title", style:"margin-top:22px" }, "Top 40 clubs"));
+  wrap.appendChild(h("div", { class:"table-wrap" }, h("table", { class:"lt" },
+    h("thead", null, h("tr", null, h("th", null, "#"), h("th", { class:"club" }, "Club"), h("th", { class:"wide" }, "Country"), h("th", null, "This season"), h("th", null, "Coefficient"))),
+    h("tbody", null, clubs.map(function(c, i){ return h("tr", null, h("td", { class:"pos" }, i + 1), h("td", { class:"club" }, clubLink(c.id)), h("td", { class:"wide" }, clubCountry(c.id)), h("td", null, fmt3(c.cur)), h("td", { class:"pts" }, fmt3(c.live))); })))));
+  wrap.appendChild(h("p", { class:"tiebreak" }, "A club's coefficient is its own points from the last five seasons, or a fifth of its country's coefficient if that is higher. It decides the seeding in every draw and the league-phase pots."));
+
+  wrap.appendChild(accessEditor());
+  return wrap;
+}
+function accessEditor(){
+  var box = h("div", { style:"margin-top:26px" });
+  function draw(){
+    box.textContent = "";
+    var acc = liveAccess(), plan = acc.plan;
+    box.appendChild(h("p", { class:"panel-title" }, "Access list"));
+    box.appendChild(h("p", { class:"lede" }, "How many clubs each place in the ranking sends to each cup, and how many go straight into the league phase. The site works out which round everyone else starts in, so every cup lands exactly on its size. Changes apply from next season."));
+    var grid = h("div", { class:"access-grid", style:"margin-top:12px" });
+    FUE.CUPS.forEach(function(k){
+      var bandsBox = h("div");
+      S.access.template[k].forEach(function(b, bi){
+        function num(field, label){
+          var i = h("input", { type:"text", inputmode:"numeric", pattern:"[0-9]*", maxlength:"2", id:"acc-" + k + "-" + bi + "-" + field, value:String(b[field]), "aria-label":label });
+          i.addEventListener("change", function(){
+            var v = parseInt(i.value, 10); if(isNaN(v) || v < 0) v = 0; if(v > 60) v = 60;
+            b[field] = v; if(b.direct > b.places) b.direct = b.places; if(b.to < b.from) b.to = b.from;
+            save(); draw();
+          });
+          return i;
+        }
+        bandsBox.appendChild(h("div", { class:"band-row" }, "Ranks", num("from", "From rank"), "to", num("to", "To rank"), num("places", "Clubs per country"), h("span", null, "clubs, ", num("direct", "Straight to league phase"), " direct")));
+      });
+      var s = plan.ok ? plan.cups[k] : (plan.partial[k] || null);
+      var verdict = s ? h("div", { class:"solve" },
+          h("span", { class:"ok-line" }, "Lands on " + S.access.target[k] + " ✓"),
+          h("div", { class:"muted" }, acc.counts[k].N + " clubs · " + s.LP + " straight to the league phase"),
+          h("div", { class:"muted" }, "Rounds: " + ["Q1","Q2","Q3","PO"].map(function(rd){ return (rd === "PO" ? "Play-off" : rd) + " " + s.fields[rd]; }).join(" · ")),
+          (s.inflow.Q2 || s.inflow.Q3 || s.inflow.PO || s.inflow.LP) ? h("div", { class:"muted" }, "Dropping in from the cup above: " + ["Q2","Q3","PO","LP"].filter(function(x){ return s.inflow[x]; }).map(function(x){ return s.inflow[x] + " at " + (x === "PO" ? "play-off" : x === "LP" ? "league phase" : x); }).join(", ")) : null)
+        : h("div", { class:"solve warn-line" }, "These numbers can't land on " + S.access.target[k] + ". Change a band in this cup or the one above.");
+      grid.appendChild(h("div", { class:"card" }, h("h3", { style:"font-size:20px; margin-bottom:8px" }, FUE.CUP_NAME[k] + " · " + S.access.target[k] + " teams"), bandsBox, verdict));
+    });
+    box.appendChild(grid);
+    box.appendChild(h("p", null, h("button", { class:"btn btn-small", type:"button", onclick:function(){
+      dialog({ title:"Go back to the default access list?", ok:"Reset", body:h("p", null, "Your changes to the access list are replaced by the default."), onOk:function(){ S.access.template = JSON.parse(JSON.stringify(DEFAULT_ACCESS.template)); save(); draw(); } });
+    } }, "Reset to the default list")));
+  }
+  draw();
+  return box;
+}
+
+/* ---------------- European cups: model ---------------- */
+var STAGE_NAME = { Q1:"Q1", Q2:"Q2", Q3:"Q3", PO:"Play-off", LP:"League phase", KO:"Knockout" };
+var ROUND_LONG = { Q1:"First qualifying round", Q2:"Second qualifying round", Q3:"Third qualifying round", PO:"Play-off round" };
+var KO_NAME = { po:"Knockout play-offs", r16:"Round of 16", qf:"Quarter-finals", sf:"Semi-finals", final:"Final" };
+var HIGHER = { el:"cl", ecl:"el", can:"ecl" };
+
+function cupOf(k){ return S.europe && S.europe.cups[k]; }
+function roundComplete(r){ return !!(r && r.ties && r.ties.length && r.ties.every(function(t){ return FUE.tieWinner(t); })); }
+function roundUsed(cup, rd){ var r = cup.rounds[rd]; return !!(r && (r.ties || !r.skipped)); }
+function prevRound(rd){ var i = FUE.ROUNDS.indexOf(rd); return i > 0 ? FUE.ROUNDS[i - 1] : null; }
+/* rounds of the cup above whose losers drop into round rd of cup k */
+function dropSources(k, rd){
+  var hi = HIGHER[k]; if(!hi) return [];
+  return Object.keys(FUE.DROP[hi]).filter(function(src){ return FUE.DROP[hi][src] === rd; }).map(function(src){ return { cup:hi, rd:src }; });
+}
+/* who is in round rd (or "LP") and whether it can be drawn yet */
+function fieldOf(k, rd){
+  var cup = cupOf(k), teams = [], waiting = [];
+  if(cup.entrants && cup.entrants[rd]) teams = teams.concat(cup.entrants[rd]);
+  var pr = rd === "LP" ? "PO" : prevRound(rd);
+  if(pr){
+    var r = cup.rounds[pr];
+    if(r && r.ties){ if(roundComplete(r)) r.ties.forEach(function(t){ teams.push(FUE.tieWinner(t)); }); else waiting.push(FUE.CUP_NAME[k] + " " + STAGE_NAME[pr]); }
+    else if(r && !r.skipped) waiting.push(FUE.CUP_NAME[k] + " " + STAGE_NAME[pr] + " draw");
+  }
+  dropSources(k, rd).forEach(function(src){
+    var hr = cupOf(src.cup).rounds[src.rd];
+    if(hr && hr.ties){ if(roundComplete(hr)) hr.ties.forEach(function(t){ var l = FUE.tieLoser(t); if(l) teams.push(l); }); else waiting.push(FUE.CUP_NAME[src.cup] + " " + STAGE_NAME[src.rd]); }
+    else if(hr && !hr.skipped) waiting.push(FUE.CUP_NAME[src.cup] + " " + STAGE_NAME[src.rd] + " draw");
+  });
+  return { teams:teams, ready:waiting.length === 0, waiting:waiting };
+}
+function lpComplete(k){ var c = cupOf(k); return !!(c && c.lp && c.lp.fixtures.length && c.lp.fixtures.every(function(f){ return f[3] !== null; })); }
+function lpStandings(k){ var c = cupOf(k); return FUE.leagueTable(c.lp.teams, c.lp.fixtures, clubName); }
+function finalWinner(f){
+  if(!f || !f.s || f.s[0] == null || f.s[1] == null) return null;
+  if(f.s[0] > f.s[1]) return f.a; if(f.s[1] > f.s[0]) return f.b;
+  return f.pen === f.a || f.pen === f.b ? f.pen : null;
+}
+function cupChampion(k){ var c = cupOf(k); return c && c.ko && c.ko.final ? finalWinner(c.ko.final) : null; }
+function inEuropeNow(id){
+  if(!S.europe) return false;
+  return FUE.CUPS.some(function(k){
+    var c = cupOf(k); if(!c) return false;
+    if(c.lp && c.lp.teams.indexOf(id) >= 0) return true;
+    return FUE.ROUNDS.some(function(rd){ var r = c.rounds[rd]; return r && r.ties && r.ties.some(function(t){ return t.a === id || t.b === id; }); });
+  });
+}
+/* status of each stage, for the stage strip */
+function stageStatus(k, st){
+  var cup = cupOf(k);
+  if(FUE.ROUNDS.indexOf(st) >= 0){
+    var r = cup.rounds[st];
+    if(!r || (r.skipped && !r.ties)) return ["skip", "Not used"];
+    if(r.ties) return roundComplete(r) ? ["done", "Done"] : ["now", "Enter results"];
+    return fieldOf(k, st).ready ? ["now", "Ready to draw"] : ["wait", "Waiting"];
+  }
+  if(st === "LP"){
+    if(cup.lp) return lpComplete(k) ? ["done", "Done"] : ["now", "Enter results"];
+    return fieldOf(k, "LP").ready ? ["now", "Ready to draw"] : ["wait", "Waiting"];
+  }
+  if(cupChampion(k)) return ["done", "Champion: " + clubName(cupChampion(k))];
+  if(cup.ko && cup.ko.po) return ["now", "In progress"];
+  return lpComplete(k) ? ["now", "Ready to draw"] : ["wait", "After league phase"];
+}
+function currentStage(k){
+  var order = ["Q1","Q2","Q3","PO","LP","KO"];
+  for(var i = 0; i < order.length; i++){ var s = stageStatus(k, order[i])[0]; if(s === "now" || s === "wait") return order[i]; }
+  return "KO";
+}
+
+/* ---------------- draws ---------------- */
+function drawQualifying(k, rd){
+  var f = fieldOf(k, rd);
+  if(!f.ready || !f.teams.length) return;
+  var teams = f.teams.map(function(id){ return { id:id, country:clubCountry(id), coef:clubCoefStart(id) }; });
+  cupOf(k).rounds[rd] = { ties:FUE.drawRound(teams), skipped:false };
+  save(); render();
+  toast(FUE.CUP_NAME[k] + " " + STAGE_NAME[rd] + " drawn");
+}
+function lpPots(k){
+  var f = fieldOf(k, "LP"), ids = f.teams.slice();
+  ids.sort(function(a, b){ return (clubCoefStart(b) - clubCoefStart(a)) || clubName(a).localeCompare(clubName(b)); });
+  var per = ids.length / 4;
+  return { ids:ids, pots:ids.map(function(_, i){ return Math.floor(i / per) + 1; }), field:f };
+}
+function drawLeaguePhase(k){
+  var cup = cupOf(k), p = lpPots(k), n = p.ids.length;
+  if(n !== cup.target || !LP_TEMPLATES[String(n)]){ toast("The league phase needs exactly " + cup.target + " clubs."); return; }
+  var teams = p.ids.map(function(id, i){ return { id:id, country:clubCountry(id), pot:p.pots[i] }; });
+  var res = FUE.leagueDraw(teams, LP_TEMPLATES[String(n)]);
+  cup.lp = { teams:p.ids, pots:p.pots, fixtures:res.fixtures };
+  save(); ui.stage = "LP"; render();
+  toast(FUE.CUP_NAME[k] + " league phase drawn");
+}
+function drawKnockout(k, step){
+  var cup = cupOf(k), ko = cup.ko;
+  if(step === "po"){
+    var st = lpStandings(k).map(function(r){ return r.id; });
+    ko.po = FUE.knockoutPlayoff(st); ko.standing = st;
+  } else if(step === "r16"){
+    var r16 = FUE.roundOf16(ko.standing, ko.po);
+    var byPath = {}; r16.forEach(function(t){ (byPath[t.path] = byPath[t.path] || []).push(t); });
+    ko.r16 = [byPath["1-2"][0], byPath["7-8"][0], byPath["3-4"][0], byPath["5-6"][0], byPath["1-2"][1], byPath["7-8"][1], byPath["3-4"][1], byPath["5-6"][1]];
+  } else if(step === "qf" || step === "sf"){
+    var prev = step === "qf" ? ko.r16 : ko.qf;
+    ko[step] = FUE.nextRound(prev).map(function(t){ return Math.random() < 0.5 ? t : { a:t.b, b:t.a, s:null, pen:null }; });
+  } else if(step === "final"){
+    var w = FUE.nextRound(ko.sf)[0];
+    ko.final = { a:w.a, b:w.b, s:[null, null], pen:null };
+  }
+  save(); render();
+}
+function nextKoStep(k){
+  var ko = cupOf(k).ko;
+  if(!ko.po) return lpComplete(k) ? "po" : null;
+  var chain = [["po","r16"],["r16","qf"],["qf","sf"],["sf","final"]];
+  for(var i = 0; i < chain.length; i++){
+    var from = chain[i][0], to = chain[i][1];
+    if(ko[from] && !ko[to]) return ko[from].every(function(t){ return FUE.tieWinner(t); }) ? to : null;
+  }
+  return null;
+}
+
+/* ---------------- European cups: page ---------------- */
+var CUP_COLOR = { cl:"var(--b-cl)", el:"var(--b-el)", ecl:"var(--b-ecl)", can:"var(--b-can)" };
+function viewEurope(){
+  var wrap = h("section");
+  if(!S.europe){
+    wrap.appendChild(h("div", { class:"page-head" }, h("div", null, h("p", { class:"eyebrow" }, "Season " + S.season.label), h("h2", null, "Europe"))));
+    wrap.appendChild(h("div", { class:"card" }, h("p", { style:"margin:0" }, "The European cups start with the next season. When you start it, the clubs that qualify are picked from the final tables and the coefficient ranking.")));
+    return wrap;
+  }
+  var k = ui.cup || "cl", cup = cupOf(k);
+  wrap.appendChild(h("div", { class:"page-head" }, h("div", null, h("p", { class:"eyebrow" }, "Season " + S.europe.season), h("h2", null, "Europe"))));
+  add(wrap, backupBanner());
+  wrap.appendChild(h("div", { class:"cupbar", role:"group", "aria-label":"Cup" }, FUE.CUPS.map(function(c){
+    return h("button", { class:"cupbtn", type:"button", "aria-pressed": c === k ? "true" : "false", onclick:function(){ ui.cup = c; ui.stage = null; ui.pane = "matches"; render(); } },
+      h("i", { style:"background:" + CUP_COLOR[c] }), FUE.CUP_NAME[c]);
+  })));
+  var champ = cupChampion(k);
+  if(champ) wrap.appendChild(h("div", { class:"champion" }, trophySvg(),
+    h("div", null, h("div", { class:"cup" }, FUE.CUP_NAME[k] + " " + S.europe.season + " winners"), h("div", { class:"who" }, euroName(champ)))));
+  var stage = ui.stage || currentStage(k);
+  var strip = h("div", { class:"stages", role:"group", "aria-label":"Stage" });
+  ["Q1","Q2","Q3","PO","LP","KO"].forEach(function(st){
+    var s = stageStatus(k, st);
+    strip.appendChild(h("button", { class:"stage " + s[0], type:"button", "aria-pressed": st === stage ? "true" : "false", onclick:function(){ ui.stage = st; render(); } },
+      h("span", { class:"nm" }, STAGE_NAME[st]), h("span", { class:"st" }, s[1])));
+  });
+  wrap.appendChild(strip);
+  if(FUE.ROUNDS.indexOf(stage) >= 0) wrap.appendChild(viewRound(k, stage));
+  else if(stage === "LP") wrap.appendChild(viewLeaguePhase(k));
+  else wrap.appendChild(viewKnockout(k));
+  return wrap;
+}
+function trophySvg(){
+  var ns = "http://www.w3.org/2000/svg", s = document.createElementNS(ns, "svg");
+  s.setAttribute("viewBox", "0 0 48 48"); s.setAttribute("class", "trophy"); s.setAttribute("aria-hidden", "true");
+  s.innerHTML = '<path d="M14 6h20v8c0 7-4.5 12-10 12S14 21 14 14z" fill="var(--b-champ)"/><path d="M14 9H7v3c0 5 3 8 8 8M34 9h7v3c0 5-3 8-8 8" fill="none" stroke="var(--b-champ)" stroke-width="3"/><rect x="21" y="26" width="6" height="8" fill="var(--b-champ)"/><rect x="14" y="34" width="20" height="6" rx="2" fill="var(--ink)"/>';
+  return s;
+}
+function teamLabel(id){ return id ? h("span", null, clubLink(id), " ", h("span", { class:"flag" }, clubCountry(id) || "")) : h("span", { class:"faint" }, "—"); }
+function viewRound(k, rd){
+  var cup = cupOf(k), r = cup.rounds[rd], box = h("div");
+  box.appendChild(h("h3", { style:"font-size:24px; margin-bottom:6px" }, FUE.CUP_NAME[k] + " · " + ROUND_LONG[rd]));
+  var drop = FUE.DROP[k][rd], lower = FUE.LOWER[k];
+  if(!r || (r.skipped && !r.ties)){ box.appendChild(h("div", { class:"note-box" }, "This round isn't used this season.")); return box; }
+  if(!r.ties){
+    var f = fieldOf(k, rd);
+    if(!f.ready){
+      box.appendChild(h("div", { class:"note-box" }, "This draw can be made when these are finished: " + f.waiting.join(", ") + "."));
+      if(cup.entrants && cup.entrants[rd] && cup.entrants[rd].length){
+        box.appendChild(h("p", { class:"panel-title" }, "Clubs that start in this round"));
+        box.appendChild(fieldList(cup.entrants[rd]));
+      }
+      return box;
+    }
+    box.appendChild(h("div", { class:"note-box" }, plural(f.teams.length, "club") + " in the draw. The stronger half (by club coefficient) is seeded and can't meet each other. Clubs from the same country are kept apart."));
+    box.appendChild(fieldList(f.teams));
+    box.appendChild(h("button", { class:"btn btn-primary", type:"button", onclick:function(){ drawQualifying(k, rd); } }, "Make the draw"));
+    return box;
+  }
+  var info = [];
+  info.push("Winners go to the " + (rd === "PO" ? "league phase" : ROUND_LONG[FUE.ROUNDS[FUE.ROUNDS.indexOf(rd) + 1]].toLowerCase()) + ".");
+  if(drop && lower) info.push("Losers drop to the " + FUE.CUP_NAME[lower] + " " + (drop === "LP" ? "league phase" : ROUND_LONG[drop].toLowerCase()) + ".");
+  else info.push("Losers are out.");
+  box.appendChild(h("div", { class:"note-box" }, info.join(" ")));
+  box.appendChild(quickToggle());
+  box.appendChild(tieList(r.ties, k + "-" + rd));
+  return box;
+}
+function fieldList(ids){
+  return h("div", { class:"field-list" }, ids.map(function(id){ return h("span", null, h("b", null, euroName(id)), h("em", null, "coef " + fmt3(clubCoefStart(id)))); }));
+}
+/* two-legged ties with score tiles and a penalty picker */
+function tieList(ties, key, opts){
+  opts = opts || {};
+  var box = h("div", { class:"ties" }), tiles = [];
+  ties.forEach(function(t, ti){
+    var card = h("div", { class:"tie" });
+    if(!t.b){ card.appendChild(h("p", { style:"margin:0" }, h("b", null, clubName(t.a)), " has a bye and goes through.")); box.appendChild(card); return; }
+    if(!t.s) t.s = [null, null, null, null];
+    var foot = h("div", { class:"tie-foot" });
+    function leg(n, homeId, awayId, iHome, iAway){
+      var st = scoreTiles("t-" + key + "-" + ti + "-" + n, t.s[iHome], t.s[iAway], [clubName(homeId) + " goals, leg " + n, clubName(awayId) + " goals, leg " + n], tiles, function(hg, ag){
+        var before = JSON.stringify(t.s);
+        t.s[iHome] = hg; t.s[iAway] = ag;
+        if(!FUE.tieLevel(t)) t.pen = null;
+        if(JSON.stringify(t.s) !== before){
+          if(hg !== null && ag !== null) S.meta.changesSinceBackup = (S.meta.changesSinceBackup || 0) + 1;
+          save(); paint(); if(opts.onChange) opts.onChange();
+        }
+      });
+      return h("div", { class:"leg" }, h("span", { class:"lbl" }, "Leg " + n), h("span", { class:"team home" }, clubLink(homeId, euroName(homeId))), st.el, h("span", { class:"team" }, clubLink(awayId, euroName(awayId))));
+    }
+    card.appendChild(leg(1, t.a, t.b, 0, 1));
+    card.appendChild(leg(2, t.b, t.a, 2, 3));
+    card.appendChild(foot);
+    function paint(){
+      foot.textContent = "";
+      var full = t.s.every(function(x){ return x !== null && x !== undefined; });
+      var A = (t.s[0] || 0) + (t.s[3] || 0), B = (t.s[1] || 0) + (t.s[2] || 0);
+      card.className = "tie" + (FUE.tieWinner(t) ? " decided" : "") + (FUE.tieLevel(t) && !t.pen ? " level" : "");
+      if(!full){ foot.appendChild(h("span", null, "Aggregate after both legs")); return; }
+      foot.appendChild(h("span", null, "Aggregate ", h("b", null, clubName(t.a) + " " + A + "–" + B + " " + clubName(t.b))));
+      if(FUE.tieLevel(t)){
+        foot.appendChild(h("span", { class:"pens" }, h("span", null, "Won on penalties:"), [t.a, t.b].map(function(id){
+          return h("button", { class:"btn", type:"button", "aria-pressed": t.pen === id ? "true" : "false", onclick:function(){ t.pen = id; save(); paint(); if(opts.onChange) opts.onChange(); } }, clubName(id));
+        })));
+      } else foot.appendChild(h("span", { class:"win" }, clubName(FUE.tieWinner(t)) + " go through"));
+    }
+    paint();
+    box.appendChild(card);
+  });
+  return box;
+}
+function viewLeaguePhase(k){
+  var cup = cupOf(k), box = h("div");
+  box.appendChild(h("h3", { style:"font-size:24px; margin-bottom:6px" }, FUE.CUP_NAME[k] + " · League phase"));
+  if(!cup.lp){
+    var f = fieldOf(k, "LP");
+    if(!f.ready){ box.appendChild(h("div", { class:"note-box" }, "The league phase can be drawn when these are finished: " + f.waiting.join(", ") + ".")); return box; }
+    var p = lpPots(k), n = p.ids.length, games = n === 48 ? 12 : 8;
+    if(n !== cup.target){
+      box.appendChild(h("div", { class:"note-box" }, "The league phase needs " + cup.target + " clubs but " + n + " have qualified. Check the clubs typed for countries with no league in the game."));
+      return box;
+    }
+    box.appendChild(h("div", { class:"note-box" }, "Pots come from the club coefficients. Each club plays " + games + " games, " + (games / 4) + " against clubs from each pot, half at home. Clubs never meet a club from their own country, and play no more than 2 clubs from one country."));
+    box.appendChild(h("div", { class:"pots" }, [1,2,3,4].map(function(pn){
+      return h("div", { class:"pot" }, h("h4", null, "Pot " + pn), h("ol", null, p.ids.filter(function(_, i){ return p.pots[i] === pn; }).map(function(id){ return h("li", null, euroName(id)); })));
+    })));
+    box.appendChild(h("button", { class:"btn btn-primary", type:"button", onclick:function(){ drawLeaguePhase(k); } }, "Make the league-phase draw"));
+    return box;
+  }
+  var body = h("div", { class:"lbody", "data-pane":ui.pane });
+  box.appendChild(paneSwitch(body, false));
+  var tablePane = h("div", { class:"pane-table" }), matchPane = h("div", { class:"pane-matches" });
+  body.appendChild(tablePane); body.appendChild(matchPane);
+  box.appendChild(body);
+  function drawLPTable(){
+    tablePane.textContent = "";
+    var st = lpStandings(k), n = st.length;
+    tablePane.appendChild(h("p", { class:"panel-title" }, "Table"));
+    tablePane.appendChild(h("div", { class:"table-wrap" }, h("table", { class:"lt" },
+      h("thead", null, h("tr", null, h("th", null, "Pos"), h("th", { class:"club" }, "Club"), h("th", null, "P"), h("th", { class:"wide" }, "W"), h("th", { class:"wide" }, "D"), h("th", { class:"wide" }, "L"), h("th", { class:"wide" }, "GF"), h("th", { class:"wide" }, "GA"), h("th", null, "GD"), h("th", null, "Pts"))),
+      h("tbody", null, st.map(function(r, i){
+        var pos = i + 1, cls = pos <= 8 ? "band-q" : pos <= 24 ? "band-kp" : "band-out";
+        return h("tr", { class:cls }, h("td", { class:"pos" }, pos), h("td", { class:"club" }, clubLink(r.id, euroName(r.id))),
+          h("td", null, r.P), h("td", { class:"wide" }, r.W), h("td", { class:"wide" }, r.D), h("td", { class:"wide" }, r.L), h("td", { class:"wide" }, r.GF), h("td", { class:"wide" }, r.GA),
+          h("td", null, (r.GD > 0 ? "+" : "") + r.GD), h("td", { class:"pts" }, r.Pts));
+      })))));
+    tablePane.appendChild(h("div", { class:"legend" },
+      h("span", null, h("i", { style:"background:var(--b-ecl)" }), "1–8: last 16"),
+      h("span", null, h("i", { style:"background:var(--b-champ)" }), "9–24: knockout play-offs"),
+      h("span", null, h("i", { style:"background:var(--line)" }), (n >= 25 ? "25–" + n : "") + ": out")));
+    tablePane.appendChild(h("p", { class:"tiebreak" }, "Level on points: goal difference, then goals scored, then wins."));
+  }
+  drawLPTable();
+  matchesPanel({ key:"eu-" + k, clubs:cup.lp.teams, fixtures:cup.lp.fixtures, pane:matchPane, onChange:drawLPTable, label:euroName });
+  return box;
+}
+function viewKnockout(k){
+  var cup = cupOf(k), ko = cup.ko, box = h("div");
+  box.appendChild(h("h3", { style:"font-size:24px; margin-bottom:6px" }, FUE.CUP_NAME[k] + " · Knockout"));
+  var step = nextKoStep(k);
+  if(!ko.po){
+    if(step === "po"){
+      box.appendChild(h("div", { class:"note-box" }, "Clubs placed 9th to 24th play two-legged play-offs: 9th/10th against 23rd/24th, 11th/12th against 21st/22nd, and so on. The seeded club plays the second leg at home. The winners meet the top eight in the last 16."));
+      box.appendChild(h("button", { class:"btn btn-primary", type:"button", onclick:function(){ drawKnockout(k, "po"); } }, "Make the knockout draw"));
+    } else box.appendChild(h("div", { class:"note-box" }, "The knockout draw is made when every league-phase match has a result."));
+    return box;
+  }
+  box.appendChild(quickToggle());
+  ["po","r16","qf","sf"].forEach(function(s){
+    if(!ko[s]) return;
+    box.appendChild(h("p", { class:"panel-title", style:"margin-top:18px" }, KO_NAME[s]));
+    box.appendChild(tieList(ko[s], k + "-" + s, { onChange:function(){ refreshNext(); } }));
+  });
+  if(ko.final){
+    var f = ko.final, tiles = [];
+    box.appendChild(h("p", { class:"panel-title", style:"margin-top:18px" }, "Final"));
+    var card = h("div", { class:"tie" }), foot = h("div", { class:"tie-foot" });
+    var st = scoreTiles("fin-" + k, f.s[0], f.s[1], [clubName(f.a) + " goals", clubName(f.b) + " goals"], tiles, function(x, y){
+      if(f.s[0] === x && f.s[1] === y) return;
+      f.s = [x, y]; if(!(x !== null && y !== null && x === y)) f.pen = null; save(); paint(); refreshNext();
+    });
+    card.appendChild(h("div", { class:"leg" }, h("span", { class:"lbl" }, "Final"), h("span", { class:"team home" }, clubLink(f.a, euroName(f.a))), st.el, h("span", { class:"team" }, clubLink(f.b, euroName(f.b)))));
+    card.appendChild(foot);
+    function paint(){
+      foot.textContent = "";
+      if(f.s[0] == null || f.s[1] == null){ foot.appendChild(h("span", null, "One match. If it's level, pick who won on penalties.")); return; }
+      if(f.s[0] === f.s[1]){
+        foot.appendChild(h("span", { class:"pens" }, h("span", null, "Won on penalties:"), [f.a, f.b].map(function(id){
+          return h("button", { class:"btn", type:"button", "aria-pressed": f.pen === id ? "true" : "false", onclick:function(){ f.pen = id; save(); render(); } }, clubName(id));
+        })));
+      } else foot.appendChild(h("span", { class:"win" }, clubName(finalWinner(f)) + " win the " + FUE.CUP_NAME[k]));
+    }
+    paint();
+    box.appendChild(card);
+  }
+  var nextBox = h("div", { style:"margin-top:14px" });
+  box.appendChild(nextBox);
+  function refreshNext(){
+    nextBox.textContent = "";
+    var s = nextKoStep(k);
+    if(s && s !== "po") nextBox.appendChild(h("button", { class:"btn btn-primary", type:"button", onclick:function(){ drawKnockout(k, s); } }, s === "final" ? "Set up the final" : "Set up the " + KO_NAME[s].toLowerCase()));
+    if(finalWinner(ko.final) && !box.querySelector(".champion-shown")){ nextBox.appendChild(h("button", { class:"btn champion-shown", type:"button", onclick:function(){ render(); } }, "Show the winners")); }
+  }
+  refreshNext();
+  return box;
+}
+
+/* ---------------- new season ---------------- */
+function nsState(){
+  if(!ui.ns || ui.ns.season !== S.season.label) ui.ns = { season:S.season.label, po:{}, repl:{}, label:nextLabel(S.season.label), nl:null };
+  return ui.ns;
+}
+/* clubs from a country with no league that played in a cup this season, in order of appearance */
+function lastNoLeagueClubs(cname, k){
+  var out = [], cup = cupOf(k); if(!cup) return out;
+  function addId(id){ if(id && clubCountry(id) === cname && out.indexOf(id) < 0) out.push(id); }
+  if(cup.lp) cup.lp.teams.forEach(addId);
+  FUE.ROUNDS.slice().reverse().forEach(function(rd){ var r = cup.rounds[rd]; if(r && r.ties) r.ties.forEach(function(t){ addId(t.a); addId(t.b); }); });
+  return out;
+}
+function noLeagueDraft(){
+  var ns = nsState();
+  if(!ns.nl){
+    ns.nl = {};
+    S.countries.filter(function(c){ return c.noLeague; }).forEach(function(c){
+      ns.nl[c.name] = {};
+      var used = {};
+      FUE.CUPS.forEach(function(k){
+        ns.nl[c.name][k] = lastNoLeagueClubs(c.name, k).filter(function(id){ if(used[id]) return false; used[id] = true; return true; }).map(clubName);
+      });
+    });
+  }
+  return ns.nl;
+}
+function planSeason(){
+  var ns = nsState(), promos = [], outs = [];
+  Object.keys(S.rules.boundaries).forEach(function(upId){
+    var r = S.rules.boundaries[upId], up = L[upId], lo = L[r.lower]; if(!up || !lo) return;
+    var tu = table(up), tl = table(lo), down = r.auto + 1;
+    var auto = tl.slice(0, r.auto).map(function(x){ return x.id; });
+    var poChoices = tl.slice(r.poFrom - 1, r.poTo).map(function(x, i){ return { id:x.id, pos:r.poFrom + i, name:x.name }; });
+    var po = ns.po[upId];
+    if(!po || !poChoices.some(function(c){ return c.id === po; })) po = poChoices.length ? poChoices[0].id : null;
+    promos.push({ up:upId, lower:lo.id, rule:r, upList:auto.concat(po ? [po] : []), downList:tu.slice(tu.length - down).map(function(x){ return x.id; }), poChoices:poChoices, po:po });
+  });
+  Object.keys(S.rules.out).forEach(function(id){
+    var l = L[id]; if(!l) return; var k = S.rules.out[id] || 0, t = table(l);
+    outs.push({ league:id, outList:k > 0 ? t.slice(t.length - k).map(function(x){ return x.id; }) : [], repl:(ns.repl[id] || []).slice() });
+  });
+  return { promos:promos, outs:outs, label:(ns.label || "").trim() || nextLabel(S.season.label), noLeague:noLeagueDraft() };
+}
+function viewSeason(){
+  var ns = nsState(), plan = planSeason(), acc = liveAccess();
+  var wrap = h("section");
+  var unfinished = S.leagues.filter(function(l){ var p = progress(l); return p.played < p.total; });
+  wrap.appendChild(h("div", { class:"page-head" }, h("div", null, h("p", { class:"eyebrow" }, "Finish " + S.season.label), h("h2", null, "Start " + plan.label),
+    h("p", { class:"lede" }, "Saves this season to History, adds this season's European results to the coefficients, picks next season's European clubs, moves clubs up and down, and makes new fixtures."))));
+  var steps = h("div", { class:"steps" }), n = 0;
+  function step(title, body){ n++; steps.appendChild(h("div", { class:"card step" }, h("h3", null, h("span", { class:"stepno" }, String(n)), title), body)); }
+
+  step("Is every league finished?", unfinished.length === 0 ? h("p", { class:"ok-line" }, "All " + S.leagues.length + " leagues are finished.")
+    : h("div", null,
+        h("p", { class:"warn-line" }, plural(unfinished.length, "league") + " still " + (unfinished.length === 1 ? "has" : "have") + " matches to play."),
+        h("details", { class:"unf" }, h("summary", null, "Show which"),
+          h("ul", null, unfinished.map(function(l){ var p = progress(l); return h("li", null, h("button", { class:"linkish", type:"button", onclick:function(){ openLeague(l.id); } }, l.name), " — " + (p.total - p.played) + " left"); }))),
+        h("p", { class:"muted" }, "You can still start the new season. Unfinished leagues use their table as it stands now.")));
+
+  if(S.europe) step("Are the European cups finished?", h("div", null, FUE.CUPS.map(function(k){
+    var c = cupChampion(k);
+    return h("p", { class: c ? "ok-line" : "warn-line", style:"margin:4px 0" }, FUE.CUP_NAME[k] + ": " + (c ? "won by " + clubName(c) : "not finished. Its points count as they stand."));
+  })));
+
+  step("Save a backup of " + S.season.label, h("div", null,
+    h("p", { class:"muted" }, "Last backup: " + when(S.meta.lastBackupAt) + ". If anything goes wrong, this file brings the whole season back."),
+    h("button", { class:"btn", type:"button", onclick:function(){ saveBackup(function(){ render(); }); } }, "Save a backup")));
+
+  var mg = h("div", { class:"move-grid" });
+  plan.promos.forEach(function(p){
+    var up = L[p.up], lo = L[p.lower];
+    var sel = h("select", { class:"field", id:"po-" + p.up, "aria-label":"Play-off winner from " + lo.name, onchange:function(){ ns.po[p.up] = sel.value; render(); } },
+      p.poChoices.map(function(c){ return h("option", { value:c.id, selected:c.id === p.po }, c.pos + ". " + c.name); }));
+    mg.appendChild(h("div", { class:"move" },
+      h("h4", null, lo.name + " ↔ " + up.name),
+      h("ul", null,
+        p.upList.slice(0, p.rule.auto).map(function(id){ return h("li", null, h("span", { class:"tag up" }, "Up"), clubName(id)); }),
+        h("li", null, h("span", { class:"tag up" }, "Up"), h("label", { for:"po-" + p.up, class:"faint", style:"font-size:13px" }, "Play-off winner"), sel),
+        p.downList.map(function(id){ return h("li", null, h("span", { class:"tag down" }, "Down"), clubName(id)); })),
+      ruleEditor(p.up)));
+  });
+  step("Promotion and relegation", h("div", null, h("p", { class:"muted" }, "Pick each play-off winner. You can change how many clubs go up automatically and which places play the play-offs."), mg));
+
+  var og = h("div", { class:"move-grid" });
+  plan.outs.forEach(function(o){
+    var l = L[o.league];
+    var kIn = h("input", { type:"text", inputmode:"numeric", pattern:"[0-9]*", maxlength:"1", id:"out-" + l.id, value:String(S.rules.out[l.id] || 0), "aria-label":"Clubs relegated out of " + l.name });
+    kIn.addEventListener("change", function(){ var v = parseInt(kIn.value, 10); if(isNaN(v) || v < 0) v = 0; if(v > 5) v = 5; S.rules.out[l.id] = v; save(); render(); });
+    var rows = o.outList.map(function(id, i){
+      var inp = h("input", { id:"rep-" + l.id + "-" + i, placeholder:"Stays in the league", value:(ns.repl[l.id] || [])[i] || "", autocomplete:"off", "aria-label":"New club replacing " + clubName(id) });
+      inp.addEventListener("input", function(){ (ns.repl[l.id] = ns.repl[l.id] || [])[i] = inp.value; });
+      return h("div", { class:"out-row" }, h("span", null, h("span", { class:"tag down" }, "Out"), " ", clubName(id)), inp);
+    });
+    og.appendChild(h("div", { class:"move" },
+      h("h4", null, l.name), h("p", { class:"faint", style:"margin:0 0 8px; font-size:13px" }, l.country),
+      h("div", { style:"display:grid; gap:6px" }, rows.length ? rows : h("p", { class:"muted", style:"margin:0" }, "Nobody goes down.")),
+      h("div", { class:"rules-row" }, h("label", { for:"out-" + l.id }, "Clubs going down"), kIn)));
+  });
+  step("Leagues with no lower division in the game", h("div", null, h("p", { class:"muted" }, "The bottom clubs drop to a division that isn't in the game. Type a new club to replace one, or leave the box empty to keep that club in the league."), og));
+
+  // countries with no league
+  var nl = plan.noLeague, ng = h("div", { class:"move-grid" }), missing = 0;
+  S.countries.filter(function(c){ return c.noLeague; }).forEach(function(c){
+    var o = acc.byCountry[c.name]; if(!o) return;
+    var rows = [];
+    FUE.CUPS.forEach(function(k){
+      for(var i = 0; i < o[k].places; i++){
+        (function(k, i){
+          var val = (nl[c.name][k] || [])[i] || "";
+          if(!val.trim()) missing++;
+          var inp = h("input", { id:"nl-" + c.name.replace(/\W/g, "") + "-" + k + "-" + i, value:val, placeholder:"Club name", autocomplete:"off", "aria-label":c.name + " " + FUE.CUP_NAME[k] + " club " + (i + 1) });
+          inp.addEventListener("input", function(){ (nl[c.name][k] = nl[c.name][k] || [])[i] = inp.value; });
+          rows.push(h("div", { class:"out-row" }, h("span", null, h("span", { class:"chip " + k }, k === "can" ? "CAN" : k.toUpperCase()), " " + (i === 0 && k === "cl" ? "Champions" : "Club " + (i + 1))), inp));
+        })(k, i);
+      }
+    });
+    ng.appendChild(h("div", { class:"move" }, h("h4", null, c.name), h("div", { style:"display:grid; gap:6px" }, rows.length ? rows : h("p", { class:"muted", style:"margin:0" }, "No European places next season."))));
+  });
+  var dupNames = [];
+  Object.keys(nl).forEach(function(cn){ var seen = {}; FUE.CUPS.forEach(function(k){ (nl[cn][k] || []).forEach(function(nm){ var key = normName(nm); if(!key) return; if(seen[key]) dupNames.push(nm.trim()); seen[key] = 1; }); }); });
+  step("European clubs from countries with no league in the game", h("div", null,
+    dupNames.length ? h("p", { class:"warn-line" }, "Typed twice: " + dupNames.join(", ") + ". A club can only play in one cup, so give each place a different club.") : null,
+    h("p", { class:"muted" }, "These countries have European places but no league here, so type who qualified. Last season's clubs are filled in to start with."),
+    missing ? h("p", { class:"warn-line" }, plural(missing, "place") + " still empty. Fill every box so each cup has the right number of clubs.") : null, ng));
+
+  // european places check
+  var planOk = acc.plan.ok;
+  step("European places next season", h("div", null,
+    planOk ? h("p", { class:"ok-line" }, FUE.CUPS.map(function(k){ return FUE.CUP_NAME[k] + " " + S.access.target[k]; }).join(" · ") + " — every cup adds up.")
+      : h("p", { class:"warn-line" }, "The access list doesn't add up for the " + FUE.CUP_NAME[acc.plan.failed] + ". Fix it on the Coefficients page before starting."),
+    h("p", { class:"muted" }, "Places come from the coefficient ranking at the end of " + S.season.label + ". The coloured rows in each top division show who is going where.")));
+
+  var labelIn = h("input", { class:"field", id:"ns-label", value:plan.label, style:"max-width:160px", "aria-label":"Name of the new season" });
+  labelIn.addEventListener("input", function(){ ns.label = labelIn.value; });
+  step("Start the new season", h("div", null,
+    h("div", { class:"rules-row", style:"font-size:15px; margin:0 0 12px" }, h("label", { for:"ns-label" }, "New season name"), labelIn),
+    h("button", { class:"btn btn-primary", type:"button", disabled: !planOk, onclick:function(){ confirmNewSeason(planSeason()); } }, "Start " + plan.label + "…")));
+  wrap.appendChild(steps);
+  return wrap;
+}
+function ruleEditor(upId){
+  var r = S.rules.boundaries[upId];
+  function num(id, val, label, key){
+    var i = h("input", { type:"text", inputmode:"numeric", pattern:"[0-9]*", maxlength:"2", id:id, value:String(val), "aria-label":label });
+    i.addEventListener("change", function(){
+      var v = parseInt(i.value, 10), n = L[r.lower].clubs.length;
+      if(isNaN(v) || v < 0) v = 0;
+      var next = { auto:r.auto, poFrom:r.poFrom, poTo:r.poTo }; next[key] = v;
+      if(next.auto > 6 || next.poFrom <= next.auto || next.poTo < next.poFrom || next.poTo > n){
+        toast("Those places don't fit. Play-off places must come after the automatic places.");
+        i.value = String(r[key]); return;
+      }
+      r[key] = v; save(); render();
+    });
+    return i;
+  }
+  return h("div", { class:"rules-row" },
+    h("label", { for:"auto-" + upId }, "Up automatically"), num("auto-" + upId, r.auto, "Clubs promoted automatically", "auto"),
+    h("label", { for:"pof-" + upId }, "Play-offs: places"), num("pof-" + upId, r.poFrom, "First play-off place", "poFrom"),
+    h("span", null, "to"), num("pot-" + upId, r.poTo, "Last play-off place", "poTo"));
+}
+function confirmNewSeason(plan){
+  var moves = 0, newClubs = 0;
+  plan.promos.forEach(function(p){ moves += p.upList.length + p.downList.length; });
+  plan.outs.forEach(function(o){ o.repl.forEach(function(x){ if(x && x.trim()) newClubs++; }); });
+  var dirty = (S.meta.changesSinceBackup || 0) > 0;
+  dialog({ title:"Start " + plan.label + "?", ok:"Start " + plan.label, danger:true,
+    body:h("div", null,
+      h("p", null, "This will:"),
+      h("ul", null,
+        h("li", null, "save the final tables" + (S.europe ? " and European results" : "") + " of " + S.season.label + " to History"),
+        h("li", null, "add " + S.season.label + " to the coefficient ranking and pick next season's European clubs"),
+        h("li", null, "move " + plural(moves, "club") + " up or down"),
+        newClubs ? h("li", null, "bring in " + plural(newClubs, "new club")) : null,
+        h("li", null, "make new fixtures for all " + S.leagues.length + " leagues and clear every score")),
+      dirty ? h("p", { class:"warn-line" }, "You haven't saved a backup since your last changes. Only a backup can undo this.") : h("p", { class:"muted" }, "Only a backup can undo this.")),
+    onOk:function(){ startSeason(plan); } });
+}
+function makeFixtures(n){
+  var teams = shuffle(Array.from({ length:n }, function(_, i){ return i; }));
+  if(n % 2) teams.push(-1);
+  var m = teams.length, half = [];
+  for(var r = 0; r < m - 1; r++){
+    var pr = [];
+    for(var i = 0; i < m / 2; i++){
+      var a = teams[i], b = teams[m - 1 - i];
+      if(a < 0 || b < 0) continue;
+      pr.push((r + i) % 2 === 0 ? [a, b] : [b, a]);
+    }
+    half.push(pr);
+    teams = [teams[0], teams[m - 1]].concat(teams.slice(1, m - 1));
+  }
+  var fx = [];
+  half.forEach(function(pr, ri){ pr.forEach(function(p){ fx.push([ri + 1, p[0], p[1], null, null]); }); });
+  half.forEach(function(pr, ri){ pr.forEach(function(p){ fx.push([ri + m, p[1], p[0], null, null]); }); });
+  return fx;
+}
+function noLeagueClub(cname, name){
+  var key = normName(name);
+  for(var id in S.clubs){ var c = S.clubs[id]; if(c.noLeague && c.country === cname && normName(c.name) === key) return id; }
+  var nid = "c" + (S.nextClubId++);
+  S.clubs[nid] = { name:name.trim(), country:cname, noLeague:true };
+  return nid;
+}
+function buildEuropeSeason(label, finalTables, acc, nlNames){
+  var entr = { cl:[], el:[], ecl:[], can:[] }, taken = {};
+  function enter(k, e){ if(!e.id || taken[e.id]) return; taken[e.id] = true; entr[k].push(e); }
+  acc.order.forEach(function(cname, ri){
+    var o = acc.byCountry[cname], c = country(cname);
+    if(c && c.noLeague){
+      FUE.CUPS.forEach(function(k){
+        var names = (nlNames[cname] && nlNames[cname][k]) || [];
+        for(var i = 0; i < o[k].places; i++){ var nm = (names[i] || "").trim(); if(nm) enter(k, { id:noLeagueClub(cname, nm), rank:ri, pos:i, direct:i < o[k].direct }); }
+      });
+      return;
+    }
+    var top = topLeague(cname); if(!top) return;
+    var order = finalTables[top.id] || [], p = 0;
+    FUE.CUPS.forEach(function(k){ for(var i = 0; i < o[k].places; i++){ var id = order[p++]; if(id) enter(k, { id:id, rank:ri, pos:i, direct:i < o[k].direct }); } });
+  });
+  var counts = {};
+  FUE.CUPS.forEach(function(k){ counts[k] = { N:entr[k].length, D:entr[k].filter(function(e){ return e.direct; }).length }; });
+  var plan = FUE.solveAll(counts, S.access.target), cups = {};
+  FUE.CUPS.forEach(function(k){
+    var list = entr[k].slice().sort(function(a, b){ return (b.direct - a.direct) || (a.rank - b.rank) || (a.pos - b.pos); });
+    var s = plan.ok ? plan.cups[k] : null, ent = { LP:[], PO:[], Q3:[], Q2:[], Q1:[] }, idx = 0;
+    if(s) ["LP","PO","Q3","Q2","Q1"].forEach(function(rd){ for(var i = 0; i < s[rd]; i++) ent[rd].push(list[idx++].id); });
+    else list.forEach(function(e){ ent.Q1.push(e.id); });
+    var rounds = {};
+    FUE.ROUNDS.forEach(function(rd){ rounds[rd] = { ties:null, skipped: s ? s.fields[rd] === 0 : rd !== "Q1" }; });
+    cups[k] = { target:S.access.target[k], entrants:ent, plan:s, rounds:rounds, lp:null, ko:{ po:null, r16:null, qf:null, sf:null, final:null } };
+  });
+  return { season:label, cups:cups };
+}
+function europeSnapshot(){
+  var E = S.europe, out = { season:E.season, cups:{}, coef:{} };
+  FUE.CUPS.forEach(function(k){
+    var c = E.cups[k], ko = c.ko || {}, f = ko.final, w = cupChampion(k);
+    var o = { winner: w ? [w, clubName(w)] : null };
+    if(f && f.a && f.b) o.final = { a:[f.a, clubName(f.a)], b:[f.b, clubName(f.b)], s:f.s, pen:f.pen ? clubName(f.pen) : null };
+    if(c.lp) o.lpTop = lpStandings(k).slice(0, 8).map(function(r){ return [r.id, r.name, r.Pts]; });
+    out.cups[k] = o;
+  });
+  var sp = seasonPoints();
+  Object.keys(sp.country).forEach(function(cn){ out.coef[cn] = sp.country[cn].value; });
+  return out;
+}
+function finalizeCoef(label){
+  var sp = seasonPoints();
+  S.countries.forEach(function(c){
+    var v = sp.country[c.name] ? sp.country[c.name].value : 0;
+    var arr = S.coef.country[c.name] || [0,0,0,0,0];
+    arr.push(v); S.coef.country[c.name] = arr.slice(-5);
+  });
+  S.coef.seasons = S.coef.seasons.concat([label]).slice(-5);
+  Object.keys(sp.club).forEach(function(id){ (S.coef.club[id] = S.coef.club[id] || {})[label] = FUE.trunc3(sp.club[id]); });
+  Object.keys(S.coef.club).forEach(function(id){
+    var o = S.coef.club[id];
+    Object.keys(o).forEach(function(s){ if(S.coef.seasons.indexOf(s) < 0) delete o[s]; });
+    if(!Object.keys(o).length) delete S.coef.club[id];
+  });
+}
+function startSeason(plan){
+  var acc = liveAccess();
+  var finalTables = {}; S.leagues.forEach(function(l){ finalTables[l.id] = table(l).map(function(r){ return r.id; }); });
+  var snap = { label:S.season.label, endedAt:Date.now(), leagues:[], moves:[] };
+  S.leagues.forEach(function(l){
+    var p = progress(l);
+    snap.leagues.push({ id:l.id, name:l.name, country:l.country, tier:l.tier, played:p.played, total:p.total,
+      table:table(l).map(function(r){ return [r.id, r.name, r.P, r.W, r.D, r.L, r.GF, r.GA, r.Pts]; }) });
+  });
+  if(S.europe) S.euroHistory.push(europeSnapshot());
+  finalizeCoef(S.europe ? S.europe.season : S.season.label);
+  var nextEurope = buildEuropeSeason(plan.label, finalTables, acc, plan.noLeague);
+
+  var members = {}; S.leagues.forEach(function(l){ members[l.id] = l.clubs.slice(); });
+  function move(id, from, to, kind){
+    members[from] = members[from].filter(function(x){ return x !== id; });
+    members[to].push(id);
+    snap.moves.push({ club:id, name:clubName(id), from:from, to:to, kind:kind });
+  }
+  plan.promos.forEach(function(p){
+    p.upList.forEach(function(id){ move(id, p.lower, p.up, "up"); });
+    p.downList.forEach(function(id){ move(id, p.up, p.lower, "down"); });
+  });
+  plan.outs.forEach(function(o){
+    o.outList.forEach(function(id, i){
+      var nm = (o.repl[i] || "").trim(); if(!nm) return;
+      var nid = "c" + (S.nextClubId++);
+      S.clubs[nid] = { name:nm, country:L[o.league].country };
+      members[o.league] = members[o.league].map(function(x){ return x === id ? nid : x; });
+      snap.moves.push({ club:id, name:clubName(id), from:o.league, to:null, kind:"out", replacedBy:nm });
+    });
+  });
+  S.leagues.forEach(function(l){ l.clubs = members[l.id]; l.fixtures = makeFixtures(l.clubs.length); });
+  S.history.push(snap);
+  S.europe = nextEurope;
+  S.season = { label:plan.label, number:(S.season.number || 1) + 1 };
+  ui.round = {}; ui.ns = null; ui.stage = null;
+  REV++; writeNow();
+  go("leagues");
+  toast(S.season.label + " has started");
+}
+
+/* ---------------- history ---------------- */
+function viewHistory(){
+  var wrap = h("section");
+  wrap.appendChild(h("div", { class:"page-head" }, h("div", null, h("p", { class:"eyebrow" }, "Past seasons"), h("h2", null, "History"))));
+  if(!S.history.length){
+    wrap.appendChild(h("div", { class:"card" }, h("p", { style:"margin:0" }, "Nothing here yet. When you start a new season, the champions, final tables and European winners of " + S.season.label + " are saved here.")));
+    return wrap;
+  }
+  S.history.slice().reverse().forEach(function(snap){
+    var sec = h("div", { class:"hist-season" }, h("h3", { style:"font-size:26px" }, snap.label));
+    var eu = S.euroHistory.filter(function(e){ return e.season === snap.label; })[0];
+    if(eu){
+      sec.appendChild(h("div", { class:"champ-grid" }, FUE.CUPS.map(function(k){
+        var c = eu.cups[k], f = c.final;
+        return h("div", { class:"champ", style:"border-left-color:" + CUP_COLOR[k] },
+          h("span", { class:"lg" }, FUE.CUP_NAME[k]),
+          h("span", { class:"cl" }, c.winner ? c.winner[1] + (S.clubs[c.winner[0]] ? " (" + countryCode(clubCountry(c.winner[0])) + ")" : "") : "Not finished"),
+          f && f.s && f.s[0] != null ? h("span", { class:"lg" }, "Final: " + f.a[1] + " " + f.s[0] + "–" + f.s[1] + " " + f.b[1] + (f.pen ? " (" + f.pen + " on penalties)" : "")) : null);
+      })));
+    }
+    var detail = h("div");
+    var grid = h("div", { class:"champ-grid" }, snap.leagues.slice().sort(function(a, b){ return a.country.localeCompare(b.country) || a.tier - b.tier; }).map(function(sl){
+      var top = sl.table[0];
+      return h("button", { class:"champ", type:"button", onclick:function(){ showFinal(detail, snap, sl); } },
+        h("span", { class:"lg" }, sl.name + " · " + sl.country + (sl.played < sl.total ? " · unfinished" : "")),
+        h("span", { class:"cl" }, top ? top[1] : "—"));
+    }));
+    sec.appendChild(h("p", { class:"panel-title", style:"margin-top:14px" }, "League champions"));
+    sec.appendChild(grid); sec.appendChild(detail);
+    wrap.appendChild(sec);
+  });
+  return wrap;
+}
+function showFinal(box, snap, sl){
+  box.textContent = "";
+  var ups = {}, downs = {};
+  snap.moves.forEach(function(m){ if(m.from === sl.id){ if(m.kind === "up") ups[m.club] = 1; else downs[m.club] = 1; } });
+  box.appendChild(h("h4", { style:"font-family:var(--display); font-size:20px; margin:16px 0 8px" }, sl.name + " " + snap.label + " — final table"));
+  box.appendChild(h("div", { class:"table-wrap" }, h("table", { class:"lt" },
+    h("thead", null, h("tr", null, h("th", null, "Pos"), h("th", { class:"club" }, "Club"), h("th", null, "P"), h("th", null, "W"), h("th", null, "D"), h("th", null, "L"), h("th", null, "GF"), h("th", null, "GA"), h("th", null, "Pts"))),
+    h("tbody", null, sl.table.map(function(r, i){
+      var cls = i === 0 ? "band-champ" : ups[r[0]] ? "band-promo" : downs[r[0]] ? "band-rel" : "";
+      return h("tr", { class:cls }, h("td", { class:"pos" }, i + 1), h("td", { class:"club" }, r[1]), h("td", null, r[2]), h("td", null, r[3]), h("td", null, r[4]), h("td", null, r[5]), h("td", null, r[6]), h("td", null, r[7]), h("td", { class:"pts" }, r[8]));
+    })))));
+  box.scrollIntoView({ behavior:"smooth", block:"start" });
+}
+
+/* ---------------- club page ---------------- */
+function openClub(id){
+  if(ui.view !== "club") ui.back = ui.view === "league" ? "leagues" : ui.view;
+  ui.clubId = id; go("club");
+}
+function viewClub(){
+  var id = ui.clubId, c = S.clubs[id];
+  var wrap = h("section");
+  if(!c) return viewLeagues();
+  var back = ui.back || "leagues";
+  wrap.appendChild(h("button", { class:"linkish back", type:"button", onclick:function(){ go(back); } }, "← Back"));
+  var lg = null; S.leagues.forEach(function(l){ if(l.clubs.indexOf(id) >= 0) lg = l; });
+  wrap.appendChild(h("div", { class:"page-head" }, h("div", null, h("p", { class:"eyebrow" }, (c.country || "Country not known") + (lg ? " · " + lg.name : " · European cups only")), h("h2", null, c.name))));
+  var facts = h("div", { class:"facts-row" });
+  if(lg){
+    var t = table(lg), pos = 0, row = null;
+    t.forEach(function(r, i){ if(r.id === id){ pos = i + 1; row = r; } });
+    facts.appendChild(fact("League position", pos + " of " + t.length));
+    facts.appendChild(fact("Points", row.Pts + " from " + row.P));
+    facts.appendChild(fact("Goals", row.GF + "–" + row.GA));
+  }
+  facts.appendChild(fact("Club coefficient", fmt3(clubCoefLive(id))));
+  var euro = europeRecord(id);
+  if(euro.cup) facts.appendChild(fact("Europe " + (S.europe ? S.europe.season : ""), FUE.CUP_NAME[euro.cup] + (euro.stage ? " · " + euro.stage : "")));
+  var titles = 0, cups = [];
+  S.history.forEach(function(snap){ snap.leagues.forEach(function(sl){ if(sl.table[0] && sl.table[0][0] === id) titles++; }); });
+  S.euroHistory.forEach(function(e){ FUE.CUPS.forEach(function(k){ if(e.cups[k].winner && e.cups[k].winner[0] === id) cups.push(FUE.CUP_NAME[k] + " " + e.season); }); });
+  if(titles) facts.appendChild(fact("League titles", String(titles)));
+  if(cups.length) facts.appendChild(fact("European trophies", cups.join(", ")));
+  wrap.appendChild(facts);
+
+  if(euro.list.length){
+    wrap.appendChild(h("p", { class:"panel-title", style:"margin-top:20px" }, "European matches this season"));
+    wrap.appendChild(h("div", { class:"res-list" }, euro.list.map(function(m){ return resRow(m.label, m.opp, m.gf, m.ga, m.home, true); })));
+  }
+  if(lg){
+    var played = [];
+    lg.fixtures.forEach(function(f){
+      if(f[3] === null) return;
+      if(lg.clubs[f[1]] === id) played.push({ r:f[0], opp:lg.clubs[f[2]], gf:f[3], ga:f[4], home:true });
+      else if(lg.clubs[f[2]] === id) played.push({ r:f[0], opp:lg.clubs[f[1]], gf:f[4], ga:f[3], home:false });
+    });
+    played.sort(function(a, b){ return b.r - a.r; });
+    wrap.appendChild(h("p", { class:"panel-title", style:"margin-top:20px" }, lg.name + " results"));
+    wrap.appendChild(played.length ? h("div", { class:"res-list" }, played.map(function(m){ return resRow("MW " + m.r, m.opp, m.gf, m.ga, m.home); }))
+      : h("p", { class:"muted" }, "No matches played yet."));
+  }
+  var rn = h("input", { class:"field", id:"club-rename", value:c.name, autocomplete:"off", style:"max-width:320px" });
+  rn.addEventListener("change", function(){
+    var v = rn.value.trim();
+    if(!v || v === c.name){ rn.value = c.name; return; }
+    c.name = v; save(); toast("Renamed to " + v); render();
+  });
+  wrap.appendChild(h("div", { style:"margin-top:24px" }, h("p", { class:"panel-title" }, "Rename this club"),
+    h("label", { for:"club-rename", class:"faint", style:"font-size:13px; display:block; margin-bottom:4px" }, "The new name is used everywhere this season. Past seasons keep the old name."), rn));
+  return wrap;
+}
+function fact(k, v){ return h("div", { class:"fact" }, h("div", { class:"k" }, k), h("div", { class:"v" }, v)); }
+function resRow(label, opp, gf, ga, home, euro){
+  var r = gf > ga ? "W" : gf === ga ? "D" : "L";
+  return h("div", { class:"res" }, h("span", { class:"faint" }, label),
+    h("span", null, (home ? "v " : "at ") , clubLink(opp, euro ? euroName(opp) : clubName(opp))),
+    h("span", { class:"r" }, gf + "–" + ga + " ", h("span", { class:"form" }, h("b", { class:r }, r))));
+}
+/* every European match of a club this season, newest stage first */
+function europeRecord(id){
+  var out = { cup:null, stage:null, list:[] };
+  if(!S.europe) return out;
+  FUE.CUPS.forEach(function(k){
+    var cup = cupOf(k); if(!cup) return;
+    function ties(arr, label){
+      (arr || []).forEach(function(t){
+        if(!t.b || (t.a !== id && t.b !== id)) return;
+        out.cup = k; out.stage = label;
+        var s = t.s || [];
+        var isA = t.a === id, opp = isA ? t.b : t.a;
+        if(s[0] != null && s[1] != null) out.list.push({ label:label + " L1", opp:opp, gf:isA ? s[0] : s[1], ga:isA ? s[1] : s[0], home:isA });
+        if(s[2] != null && s[3] != null) out.list.push({ label:label + " L2", opp:opp, gf:isA ? s[3] : s[2], ga:isA ? s[2] : s[3], home:!isA });
+      });
+    }
+    FUE.ROUNDS.forEach(function(rd){ var r = cup.rounds[rd]; if(r) ties(r.ties, STAGE_NAME[rd]); });
+    if(cup.lp && cup.lp.teams.indexOf(id) >= 0){
+      out.cup = k; out.stage = "League phase";
+      var i = cup.lp.teams.indexOf(id);
+      cup.lp.fixtures.forEach(function(f){
+        if(f[3] === null) return;
+        if(f[1] === i) out.list.push({ label:"LP " + f[0], opp:cup.lp.teams[f[2]], gf:f[3], ga:f[4], home:true });
+        else if(f[2] === i) out.list.push({ label:"LP " + f[0], opp:cup.lp.teams[f[1]], gf:f[4], ga:f[3], home:false });
+      });
+    }
+    var ko = cup.ko || {};
+    ["po","r16","qf","sf"].forEach(function(s){ ties(ko[s], { po:"KO play-off", r16:"Last 16", qf:"Quarter-final", sf:"Semi-final" }[s]); });
+    if(ko.final && (ko.final.a === id || ko.final.b === id)){
+      out.cup = k; out.stage = finalWinner(ko.final) === id ? "Winners" : "Final";
+      var f = ko.final, isA = f.a === id;
+      if(f.s && f.s[0] != null && f.s[1] != null) out.list.push({ label:"Final", opp:isA ? f.b : f.a, gf:isA ? f.s[0] : f.s[1], ga:isA ? f.s[1] : f.s[0], home:isA });
+    }
+  });
+  out.list.reverse();
+  return out;
+}
+
+/* ---------------- backup ---------------- */
+function viewBackup(){
+  var wrap = h("section");
+  var bytes = 0; try { bytes = (localStorage.getItem(KEY) || "").length; } catch(e){}
+  var played = 0; S.leagues.forEach(function(l){ played += progress(l).played; });
+  wrap.appendChild(h("div", { class:"page-head" }, h("div", null, h("p", { class:"eyebrow" }, "Keep it safe"), h("h2", null, "Backup"),
+    h("p", { class:"lede" }, "Everything is saved in this browser on this device only. A backup file is your copy if the device is lost, reset or cleared."))));
+  wrap.appendChild(h("div", { class:"two" },
+    h("div", { class:"card" },
+      h("h3", { style:"font-size:22px; margin-bottom:6px" }, "Save a backup"),
+      h("p", { class:"muted" }, "On an iPad this opens the share sheet. Choose Save to Files and pick OneDrive or iCloud Drive."),
+      h("button", { class:"btn btn-primary", type:"button", onclick:function(){ saveBackup(function(){ render(); }); } }, "Save a backup"),
+      h("dl", { class:"facts" },
+        h("dt", null, "Last backup"), h("dd", null, when(S.meta.lastBackupAt)),
+        h("dt", null, "Results since then"), h("dd", { class:"num" }, fmt(S.meta.changesSinceBackup || 0)),
+        h("dt", null, "Season"), h("dd", null, S.season.label + " · " + fmt(played) + " league results"),
+        h("dt", null, "Size"), h("dd", { class:"num" }, Math.round(bytes / 1024) + " KB"),
+        h("dt", null, "Protected from clearing"), h("dd", null, persisted === true ? "Yes" : persisted === false ? "No — save backups often" : "Not known"))),
+    h("div", { class:"card" },
+      h("h3", { style:"font-size:22px; margin-bottom:6px" }, "Load a backup"),
+      h("p", { class:"muted" }, "Replaces everything on this device with the backup file. Use it to restore, or to move to another device."),
+      fileButton("Choose backup file", loadFromFile))));
+  return wrap;
+}
+function markBackedUp(){ S.meta.lastBackupAt = Date.now(); S.meta.changesSinceBackup = 0; writeNow(); toast("Backup saved"); }
+function saveBackup(after){
+  writeNow();
+  var name = "football-universe-backup-" + stamp() + ".json", text = JSON.stringify(S);
+  function done(){ markBackedUp(); if(after) after(); }
+  if(downloads){
+    downloads.save({ filename:name, data:text }).then(done).catch(function(e){
+      if(e && e.code === "declined") return;
+      dialog({ title:"Backup not saved", body:h("p", null, (e && e.message) || "The file could not be saved."), cancel:null });
+    });
+    return;
+  }
+  try {
+    var file = new File([text], name, { type:"application/json" });
+    if(navigator.canShare && navigator.canShare({ files:[file] })){
+      navigator.share({ files:[file], title:"Football Universe backup" }).then(done).catch(function(err){
+        if(err && err.name === "AbortError") return;
+        linkDownload(name, text, done);
+      });
+      return;
+    }
+  } catch(e){}
+  linkDownload(name, text, done);
+}
+function linkDownload(name, text, done){
+  try {
+    var url = URL.createObjectURL(new Blob([text], { type:"application/json" }));
+    var a = h("a", { href:url, download:name, style:"display:none" });
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); if(a.parentNode) a.parentNode.removeChild(a); }, 1500);
+    done();
+  } catch(e){
+    dialog({ title:"Backup not saved", body:h("p", null, "This browser can't save files from the page."), cancel:null });
+  }
+}
+function fileButton(label, onFile){
+  var inp = h("input", { type:"file", accept:".json,application/json", "aria-label":label });
+  inp.addEventListener("change", function(){ var f = inp.files && inp.files[0]; if(f) onFile(f); inp.value = ""; });
+  return h("span", { class:"btn filebtn" }, label, inp);
+}
+function loadFromFile(file){
+  var fr = new FileReader();
+  fr.onload = function(){
+    var d = null; try { d = JSON.parse(fr.result); } catch(e){}
+    if(!valid(d)){ dialog({ title:"That isn't a Football Universe file", body:h("p", null, "Choose football-universe-start.json or a file made with Save a backup."), cancel:null }); return; }
+    var played = 0; d.leagues.forEach(function(l){ l.fixtures.forEach(function(f){ if(f[3] !== null) played++; }); });
+    var body = h("div", null,
+      h("p", null, "Season " + d.season.label + " · " + plural(d.leagues.length, "league") + " · " + plural(played, "league result") + (d.meta && d.meta.lastBackupAt ? " · saved " + when(d.meta.lastBackupAt) : "")),
+      S ? h("p", { class:"warn-line" }, "This replaces everything on this device.") : null);
+    dialog({ title:S ? "Replace everything with this file?" : "Load this file?", ok:S ? "Replace" : "Load", danger:!!S, body:body, onOk:function(){
+      S = migrate(d); index(); REV++; writeNow(); askPersist(); ui.round = {}; ui.ns = null; ui.stage = null; go("leagues"); toast("Loaded");
+    } });
+  };
+  fr.readAsText(file);
+}
+
+/* ---------------- start ---------------- */
+function boot(){
+  var stored = readStore();
+  if(valid(stored)){ S = migrate(stored); }
+  else if(!stored && window.FU_SEED && valid(window.FU_SEED)){ S = migrate(JSON.parse(JSON.stringify(window.FU_SEED))); writeNow(); }
+  if(S){ index(); askPersist(); setSaveState(storageOK ? "Saved on this device" : "Not saved — device storage problem", !storageOK); }
+  render();
+  try {
+    if(window.claude && typeof window.claude.use === "function"){
+      window.claude.use("downloads").then(function(d){ downloads = d; }).catch(function(){});
+    }
+  } catch(e){}
+}
+window.__fu = { table:function(id){ return table(L[id]); }, data:function(){ return S; }, seasonPoints:seasonPoints, liveRanking:liveRanking, liveAccess:liveAccess,
+  fieldOf:fieldOf, lpStandings:lpStandings, clubCoefStart:clubCoefStart, cupChampion:cupChampion, render:function(){ REV++; render(); }, planSeason:planSeason, startSeason:startSeason };
+boot();
+
+})();
+</script>
+
+
+</body>
+</html>
