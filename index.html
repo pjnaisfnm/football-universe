@@ -8,6 +8,8 @@
 <meta name="apple-mobile-web-app-title" content="Football Universe">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="theme-color" content="#0F1C2B">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
 <title>Football Universe</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -655,7 +657,7 @@ function nextLabel(label){
 }
 function shortLabel(label){ var m = /^(\d{4})\/(\d{2})$/.exec(label || ""); return m ? m[1].slice(2) + "/" + m[2] : label; }
 function shuffle(a){ for(var i = a.length - 1; i > 0; i--){ var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-function normName(s){ return String(s || "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
+function normName(s){ return String(s || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(); }
 
 /* ---------------- storage ---------------- */
 function readStore(){
@@ -708,6 +710,8 @@ function migrate(d){
   if(!d.euroHistory) d.euroHistory = [];
   if(!d.access) d.access = JSON.parse(JSON.stringify(DEFAULT_ACCESS));
   if(!d.coef) d.coef = JSON.parse(JSON.stringify(DEFAULT_COEF));
+  var notes = applyPatches(d);
+  if(notes.length){ patchNotes = notes; d.__patched = true; }
   return d;
 }
 function index(){
@@ -815,6 +819,7 @@ function render(){
   renderTabs();
   var app = document.getElementById("app"); app.textContent = "";
   if(!S){ app.appendChild(viewWelcome()); return; }
+  add(app, seedBanner());
   var v = { leagues:viewLeagues, league:viewLeague, europe:viewEurope, coef:viewCoef, season:viewSeason, history:viewHistory, backup:viewBackup, club:viewClub }[ui.view] || viewLeagues;
   app.appendChild(v());
 }
@@ -839,6 +844,16 @@ function dialog(o){
   document.addEventListener("keydown", esc, true);
   document.body.appendChild(back);
   setTimeout(function(){ try{ okBtn.focus(); }catch(e){} }, 0);
+}
+/* preview only: the page carries newer starting data than what this browser saved */
+function seedBanner(){
+  var seed = window.FU_SEED;
+  if(!seed || !seed.meta || !seed.meta.seed || (S.meta && S.meta.seed === seed.meta.seed)) return null;
+  return h("div", { class:"banner" },
+    h("span", null, "This preview has newer data from Tymek's Excel file, including the European cups. Load it? It replaces what this browser has saved."),
+    h("button", { class:"btn btn-small btn-primary", type:"button", onclick:function(){
+      S = migrate(JSON.parse(JSON.stringify(seed))); delete S.__patched; index(); REV++; writeNow(); ui.round = {}; ui.ns = null; ui.stage = null; go("leagues"); toast("Newer data loaded"); showPatchNotes();
+    } }, "Load newer data"));
 }
 function backupBanner(){
   var n = S.meta.changesSinceBackup || 0;
@@ -882,6 +897,106 @@ function scoreTiles(idBase, hv, av, labels, tiles, onCommit){
 function quickToggle(){
   var qc = h("input", { type:"checkbox", id:"quick", checked: ui.quick, onchange:function(){ ui.quick = qc.checked; } });
   return h("label", { class:"quick", for:"quick" }, qc, "Jump to the next box after each score (untick for scores of 10 or more)");
+}
+
+/* ---------------- updates to saved data ----------------
+   Each update runs once on any saved data that doesn't have it yet (the iPad's own data,
+   a backup file or the starting file). It only adds or changes what it names, and never
+   touches results. meta.patches remembers which updates have run. */
+var APP_VERSION = "1 November 2026";
+var patchNotes = [];   // what the last load changed, shown once to the player
+
+var NEW_LEAGUES = [
+  { id:"israel-premier-league", name:"Israel Premier League", country:"Israel", out:2,
+    clubs:["Beitar Jerusalem","Bnei Sakhnin","Hapoel Be'er Sheva","Hapoel Haifa","Hapoel Jerusalem","Hapoel Petah Tikva","Hapoel Ramat Gan",
+           "Hapoel Tel Aviv","Ironi Kiryat Shmona","Ironi Tiberias","Maccabi Haifa","Maccabi Netanya","Maccabi Petah Tikva","Maccabi Tel Aviv"],
+    known:{ c872:"Maccabi Haifa", c874:"Maccabi Tel Aviv", c875:"Hapoel Tel Aviv", c876:"Beitar Jerusalem" } },
+  { id:"kosovo-superleague", name:"Kosovo Superleague", country:"Kosovo", out:2,
+    clubs:["Ballkani","Drenica","Drita","Dukagjini","Feronikeli","Gjilani","Llapi","Malisheva","Prishtina","Vushtrria"],
+    known:{ c871:"Drita", c873:"Malisheva", c878:"Llapi" } },
+  { id:"north-macedonia-first-league", name:"North Macedonia First League", country:"North Macedonia", out:2,
+    clubs:["Arsimi","Bashkimi","Bregalnica","Shkendija","Shkendija 77","Sileks","Skopje","Struga","Tikvesh","Vardar"],
+    known:{ c879:"Shkendija", c882:"Vardar" } }
+];
+
+function clubKey(s){ return normName(s).replace(/^(fk|kf|fc|sc|ks|ns)\s+/, "").replace(/\s+(fk|kf|fc)$/, ""); }
+
+/* Israel, Kosovo and North Macedonia get a top division with their real 2026/27 clubs.
+   Clubs from those countries already in the European cups keep their id (and every European result)
+   and become league clubs. Fixtures start empty. */
+function patchNewLeagues(d){
+  var notes = [];
+  NEW_LEAGUES.forEach(function(nl){
+    if(d.leagues.some(function(l){ return l.country === nl.country || l.id === nl.id; })) return;
+    var names = nl.clubs.slice(), slots = names.map(function(){ return null; });
+    var mine = Object.keys(d.clubs).filter(function(id){ return d.clubs[id].country === nl.country; });
+    // 1. the clubs we know from the starting file, by id (works even if Tymek renamed them)
+    Object.keys(nl.known).forEach(function(id){
+      var i = names.indexOf(nl.known[id]);
+      if(d.clubs[id] && d.clubs[id].country === nl.country && i >= 0 && slots[i] === null) slots[i] = id;
+    });
+    // 2. any other club from that country, by name
+    mine.forEach(function(id){
+      if(slots.indexOf(id) >= 0) return;
+      var k = clubKey(d.clubs[id].name);
+      for(var i = 0; i < names.length; i++) if(slots[i] === null && clubKey(names[i]) === k){ slots[i] = id; return; }
+    });
+    // 3. clubs from that country that match nobody still have to be in the league: they take a free place from the end
+    mine.forEach(function(id){
+      if(slots.indexOf(id) >= 0) return;
+      for(var i = names.length - 1; i >= 0; i--) if(slots[i] === null){ slots[i] = id; return; }
+      names.push(d.clubs[id].name); slots.push(id);
+    });
+    // 4. everyone else is a new club
+    var ids = slots.map(function(id, i){
+      if(id) return id;
+      var nid = "c" + (d.nextClubId++);
+      d.clubs[nid] = { name:names[i], country:nl.country };
+      return nid;
+    });
+    ids.forEach(function(id){ delete d.clubs[id].noLeague; });
+    d.leagues.push({ id:nl.id, name:nl.name, country:nl.country, tier:1, clubs:ids, fixtures:makeFixtures(ids.length) });
+    d.rules.out[nl.id] = nl.out;
+    d.countries.forEach(function(c){ if(c.name === nl.country) delete c.noLeague; });
+    if(!d.countries.some(function(c){ return c.name === nl.country; })) d.countries.push({ name:nl.country, europe:{cl:0,el:0,ecl:0,can:0} });
+    notes.push("New league: " + nl.name + " with " + ids.length + " clubs. Its matches start from matchweek 1.");
+  });
+  return notes;
+}
+
+/* Real 2026/27 rules for England, and 2 clubs down from small leagues (10 to 12 clubs).
+   A rule is only changed if it is still the old setting, so anything Tymek changed himself stays. */
+function patchRelegation(d){
+  var notes = [], b = d.rules.boundaries, out = d.rules.out;
+  function is(r, auto, f, t){ return r && r.auto === auto && r.poFrom === f && r.poTo === t; }
+  if(is(b["premier-league"], 2, 3, 6)){ b["premier-league"].poTo = 8; notes.push("Championship: play-offs are now 3rd to 8th, as in real life from 2026/27."); }
+  if(is(b["league-one"], 2, 3, 6)){
+    b["league-one"].auto = 3; b["league-one"].poFrom = 4; b["league-one"].poTo = 7;
+    notes.push("League Two: the top 3 go up and the play-offs are 4th to 7th. League One: the bottom 4 go down.");
+  }
+  if(out["league-two"] === 3){ out["league-two"] = 2; notes.push("League Two: the bottom 2 drop out of the game."); }
+  var small = [];
+  d.leagues.forEach(function(l){ if(l.clubs.length <= 12 && out[l.id] === 3){ out[l.id] = 2; small.push(l.name); } });
+  if(small.length) notes.push("Leagues with 10 to 12 clubs: 2 clubs go down instead of 3 (" + plural(small.length, "league") + ").");
+  return notes;
+}
+
+var PATCHES = [["2026-11-new-leagues", patchNewLeagues], ["2026-11-relegation", patchRelegation]];
+function applyPatches(d){
+  var done = d.meta.patches = d.meta.patches || [], notes = [];
+  PATCHES.forEach(function(p){
+    if(done.indexOf(p[0]) >= 0) return;
+    notes = notes.concat(p[1](d) || []);
+    done.push(p[0]);
+  });
+  return notes;
+}
+function showPatchNotes(){
+  if(!patchNotes.length) return;
+  var notes = patchNotes; patchNotes = [];
+  dialog({ title:"Football Universe has been updated", cancel:null, ok:"Great",
+    body:h("div", null, h("ul", null, notes.map(function(n){ return h("li", null, n); })),
+      h("p", { class:"muted" }, "All your results are still here."))});
 }
 
 /* ---------------- welcome (no data yet) ---------------- */
@@ -1764,7 +1879,7 @@ function viewSeason(){
   });
   var dupNames = [];
   Object.keys(nl).forEach(function(cn){ var seen = {}; FUE.CUPS.forEach(function(k){ (nl[cn][k] || []).forEach(function(nm){ var key = normName(nm); if(!key) return; if(seen[key]) dupNames.push(nm.trim()); seen[key] = 1; }); }); });
-  step("European clubs from countries with no league in the game", h("div", null,
+  if(S.countries.some(function(c){ return c.noLeague; })) step("European clubs from countries with no league in the game", h("div", null,
     dupNames.length ? h("p", { class:"warn-line" }, "Typed twice: " + dupNames.join(", ") + ". A club can only play in one cup, so give each place a different club.") : null,
     h("p", { class:"muted" }, "These countries have European places but no league here, so type who qualified. Last season's clubs are filled in to start with."),
     missing ? h("p", { class:"warn-line" }, plural(missing, "place") + " still empty. Fill every box so each cup has the right number of clubs.") : null, ng));
@@ -2114,7 +2229,8 @@ function viewBackup(){
         h("dt", null, "Results since then"), h("dd", { class:"num" }, fmt(S.meta.changesSinceBackup || 0)),
         h("dt", null, "Season"), h("dd", null, S.season.label + " · " + fmt(played) + " league results"),
         h("dt", null, "Size"), h("dd", { class:"num" }, Math.round(bytes / 1024) + " KB"),
-        h("dt", null, "Protected from clearing"), h("dd", null, persisted === true ? "Yes" : persisted === false ? "No — save backups often" : "Not known"))),
+        h("dt", null, "Protected from clearing"), h("dd", null, persisted === true ? "Yes" : persisted === false ? "No — save backups often" : "Not known"),
+        h("dt", null, "Website version"), h("dd", null, APP_VERSION))),
     h("div", { class:"card" },
       h("h3", { style:"font-size:22px; margin-bottom:6px" }, "Load a backup"),
       h("p", { class:"muted" }, "Replaces everything on this device with the backup file. Use it to restore, or to move to another device."),
@@ -2171,7 +2287,7 @@ function loadFromFile(file){
       h("p", null, "Season " + d.season.label + " · " + plural(d.leagues.length, "league") + " · " + plural(played, "league result") + (d.meta && d.meta.lastBackupAt ? " · saved " + when(d.meta.lastBackupAt) : "")),
       S ? h("p", { class:"warn-line" }, "This replaces everything on this device.") : null);
     dialog({ title:S ? "Replace everything with this file?" : "Load this file?", ok:S ? "Replace" : "Load", danger:!!S, body:body, onOk:function(){
-      S = migrate(d); index(); REV++; writeNow(); askPersist(); ui.round = {}; ui.ns = null; ui.stage = null; go("leagues"); toast("Loaded");
+      S = migrate(d); delete S.__patched; index(); REV++; writeNow(); askPersist(); ui.round = {}; ui.ns = null; ui.stage = null; go("leagues"); toast("Loaded"); showPatchNotes();
     } });
   };
   fr.readAsText(file);
@@ -2180,10 +2296,11 @@ function loadFromFile(file){
 /* ---------------- start ---------------- */
 function boot(){
   var stored = readStore();
-  if(valid(stored)){ S = migrate(stored); }
-  else if(!stored && window.FU_SEED && valid(window.FU_SEED)){ S = migrate(JSON.parse(JSON.stringify(window.FU_SEED))); writeNow(); }
+  if(valid(stored)){ S = migrate(stored); if(S.__patched){ delete S.__patched; writeNow(); } }
+  else if(!stored && window.FU_SEED && valid(window.FU_SEED)){ S = migrate(JSON.parse(JSON.stringify(window.FU_SEED))); delete S.__patched; writeNow(); }
   if(S){ index(); askPersist(); setSaveState(storageOK ? "Saved on this device" : "Not saved — device storage problem", !storageOK); }
   render();
+  showPatchNotes();
   try {
     if(window.claude && typeof window.claude.use === "function"){
       window.claude.use("downloads").then(function(d){ downloads = d; }).catch(function(){});
