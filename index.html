@@ -280,8 +280,9 @@ details.unf summary{cursor:pointer; color:var(--accent); font-weight:600}
 .tie.level{border-color:var(--warn); background:var(--warn-soft)}
 .leg{display:grid; grid-template-columns:48px minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:8px}
 .leg .lbl{font-family:var(--display); font-weight:700; font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-faint)}
-.leg .team{font-weight:600; font-size:15px; line-height:1.2; overflow-wrap:anywhere}
+.leg .team{font-weight:600; font-size:15px; line-height:1.2; overflow-wrap:break-word; min-width:0}
 .leg .home{text-align:right}
+.leg.single{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
 .tie-foot{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; font-size:13.5px; color:var(--ink-soft); padding-top:4px; border-top:1px dashed var(--line)}
 .tie-foot b{color:var(--ink)}
 .pens{display:flex; gap:6px; flex-wrap:wrap; align-items:center}
@@ -289,6 +290,16 @@ details.unf summary{cursor:pointer; color:var(--accent); font-weight:600}
 .pens button[aria-pressed="true"]{background:var(--good); border-color:var(--good); color:#fff}
 .flag{font-size:12px; color:var(--ink-faint); font-weight:500}
 .win{color:var(--good); font-weight:700}
+.lt tr.grp td{background:var(--surface-2); text-align:left; font-family:var(--display); font-weight:700; font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-soft); padding:6px 10px}
+.lt tr.cut td{border-top:2px dashed var(--ink-faint)}
+details.fmt{margin:0 0 12px; font-size:14.5px; color:var(--ink-soft)}
+details.fmt summary{cursor:pointer; color:var(--accent); font-weight:600}
+details.fmt ul{margin:8px 0 0; padding-left:20px; display:grid; gap:4px}
+.fmt-card{margin:0 0 14px; border-left:5px solid var(--accent)}
+.fmt-card h3{font-size:22px; margin:0 0 6px}
+.fmt-card ul{margin:6px 0 12px; padding-left:20px; display:grid; gap:4px; font-size:14.5px}
+.fmt-line{margin:0 0 12px; font-size:14px}
+.lflag{align-self:flex-start; font-family:var(--display); font-weight:700; font-size:12px; letter-spacing:.06em; text-transform:uppercase; border-radius:4px; padding:2px 7px; background:var(--accent); color:var(--accent-ink, #fff)}
 .note-box{background:var(--surface-2); border-radius:var(--radius); padding:12px 14px; margin-bottom:14px; font-size:14px; color:var(--ink-soft)}
 .field-list{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:6px; margin:10px 0 14px}
 .field-list span{display:flex; justify-content:space-between; gap:8px; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:7px 10px; font-size:14px}
@@ -743,11 +754,13 @@ function downCount(l){
 }
 function progress(l){
   var p = 0; l.fixtures.forEach(function(f){ if(f[3] !== null) p++; });
-  return { played:p, total:l.fixtures.length };
+  var t = l.fixtures.length + (splitConf(l) && !l.split ? splitGamesTotal(l) : 0), po = poMatches(l);
+  return { played:p + po.played, total:t + po.total };
 }
 function rounds(l){ var m = 0; l.fixtures.forEach(function(f){ if(f[0] > m) m = f[0]; }); return m; }
 function table(l){
-  var rows = l.clubs.map(function(id, slot){ return { slot:slot, id:id, name:clubName(id), P:0, W:0, D:0, L:0, GF:0, GA:0, GD:0, Pts:0, form:[] }; });
+  var sp = l.split, conf = sp ? splitConf(l) : null;
+  var rows = l.clubs.map(function(id, slot){ return { slot:slot, id:id, name:clubName(id), P:0, W:0, D:0, L:0, GF:0, GA:0, GD:0, Pts:0, form:[], reg:0, grp:0 }; });
   var order = l.fixtures.map(function(f, i){ return i; }).sort(function(a, b){ return (l.fixtures[a][0] - l.fixtures[b][0]) || (a - b); });
   order.forEach(function(i){
     var f = l.fixtures[i]; if(f[3] === null) return;
@@ -755,10 +768,32 @@ function table(l){
     [[hm, hg, ag], [aw, ag, hg]].forEach(function(x){
       var r = x[0], gf = x[1], ga = x[2];
       r.P++; r.GF += gf; r.GA += ga;
+      var pts = gf > ga ? 3 : gf === ga ? 1 : 0;
+      if(sp && f[0] > sp.round) r.grp += pts; else r.reg += pts;
       if(gf > ga){ r.W++; r.form.push("W"); } else if(gf === ga){ r.D++; r.form.push("D"); } else { r.L++; r.form.push("L"); }
     });
   });
   rows.forEach(function(r){ r.GD = r.GF - r.GA; r.Pts = r.W * 3 + r.D; r.form = r.form.slice(-5); });
+  if(sp && conf){
+    // after the split: each club stays in its group; halved groups start from half their points, rounded up
+    var gOf = {}; sp.groups.forEach(function(g, gi){ g.forEach(function(slot){ gOf[slot] = gi; }); });
+    rows.forEach(function(r){
+      r.group = gOf[r.slot] === undefined ? sp.groups.length - 1 : gOf[r.slot];
+      var g = conf[r.group] || {};
+      r.rounded = !!(g.half && r.reg % 2);
+      r.start = g.half ? Math.ceil(r.reg / 2) : r.reg;
+      r.Pts = r.start + r.grp;
+    });
+    rows.sort(function(a, b){
+      if(a.group !== b.group) return a.group - b.group;
+      if(b.Pts !== a.Pts) return b.Pts - a.Pts;
+      if(a.rounded !== b.rounded) return a.rounded ? 1 : -1;   // level after halving: the club that gained from rounding goes below
+      if(b.GD !== a.GD) return b.GD - a.GD;
+      if(b.GF !== a.GF) return b.GF - a.GF;
+      return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1;
+    });
+    return rows;
+  }
   rows.sort(function(a, b){
     if(b.Pts !== a.Pts) return b.Pts - a.Pts;
     if(b.GD !== a.GD) return b.GD - a.GD;
@@ -794,6 +829,19 @@ function bands(l){
     legend.push(["rel", S.rules.boundaries[l.id] ? "Relegated" : "Relegated out of the game"]);
   }
   pos[1] = "champ";
+  if(!ub && poTemplate(l)){
+    var plan = poPlan(l), w = poWinner(l);
+    if(plan.ok){
+      if(w && l.po){
+        var ids = table(l).map(function(r){ return r.id; }), pw = ids.indexOf(w) + 1, pd = ids.indexOf(l.po.def) + 1;
+        if(pw > 0 && pd > 0 && pw !== pd){ var tmp = pos[pw]; pos[pw] = pos[pd]; pos[pd] = tmp; }
+      } else {
+        var any = false;
+        Object.keys(plan.pos).forEach(function(sp){ var p = plan.pos[sp]; if(p > plan.k && (!pos[p] || pos[p] === "rel")){ pos[p] = "po"; any = true; } });
+        if(any) legend.push(["po", "European play-off"]);
+      }
+    }
+  }
   return { pos:pos, legend:legend };
 }
 
@@ -903,7 +951,7 @@ function quickToggle(){
    Each update runs once on any saved data that doesn't have it yet (the iPad's own data,
    a backup file or the starting file). It only adds or changes what it names, and never
    touches results. meta.patches remembers which updates have run. */
-var APP_VERSION = "1 November 2026";
+var APP_VERSION = "1 November 2026 · league formats";
 var patchNotes = [];   // what the last load changed, shown once to the player
 
 var NEW_LEAGUES = [
@@ -981,7 +1029,30 @@ function patchRelegation(d){
   return notes;
 }
 
-var PATCHES = [["2026-11-new-leagues", patchNewLeagues], ["2026-11-relegation", patchRelegation]];
+/* Real league formats: more meetings (the extra matchweeks are added after the current ones, this season),
+   splits into groups and European play-offs. Results already entered are not touched. */
+function patchFormats(d){
+  var more = [], splits = 0, pos = 0;
+  d.leagues.forEach(function(l){
+    var f = FORMATS[l.id]; if(!f || l.format) return;
+    l.format = JSON.parse(JSON.stringify(f));
+    var n = l.clubs.length, have = lastRound(l.fixtures);
+    if(f.meet > 2 && !l.split && have <= 2 * (n - 1)){
+      addRounds(l.fixtures, roundRobin(l.clubs.map(function(_, i){ return i; }), f.meet - 2), have);
+      more.push(l.name);
+    }
+    if(f.split) splits++;
+    if(f.po) pos++;
+  });
+  var notes = [];
+  if(more.length) notes.push(plural(more.length, "league") + " now play each other 3 or 4 times, as in real life. The extra matchweeks are added after the ones already there.");
+  if(splits) notes.push(plural(splits, "league") + " split into groups after the regular season (like Scotland). A “Make the split” button appears when the regular season is finished.");
+  if(pos) notes.push(plural(pos, "league") + " have a European play-off at the end of the season.");
+  if(notes.length) notes.push("Open a league and tap “How this league works” to see its format.");
+  return notes;
+}
+
+var PATCHES = [["2026-11-new-leagues", patchNewLeagues], ["2026-11-relegation", patchRelegation], ["2026-11-formats", patchFormats]];
 function applyPatches(d){
   var done = d.meta.patches = d.meta.patches || [], notes = [];
   PATCHES.forEach(function(p){
@@ -998,6 +1069,251 @@ function showPatchNotes(){
     body:h("div", null, h("ul", null, notes.map(function(n){ return h("li", null, n); })),
       h("p", { class:"muted" }, "All your results are still here."))});
 }
+
+/* ---------------- league formats ----------------
+   Each league can have:
+   - meet: how many times every club plays every other club in the regular season (2, 3 or 4)
+   - split: after the regular season the table splits into groups (in table order). Each group plays
+     a round robin of its own (meet 0, 1 or 2). Points carry over, or are halved (rounded up) in that group.
+     A club can't leave its group, so the top group always finishes above the next one.
+   - po: a European play-off after the last league match. It decides the country's last European place
+     (counting Champions League, Europa League and Conference League places, not the Canera Cup).
+   Formats follow real life in 2026/27, fitted to the number of clubs each league has in the game. */
+function grp(name, size, meet, half){ return { name:name, size:size, meet:meet, half:half ? "up" : null }; }
+var CHG = "Championship group", RLG = "Relegation group";
+
+/* play-off templates. A tie is [a, b, legs]. a/b: "K" = the club in the last European place,
+   "K+1" = the next club down, "P7" = the club in 7th place, "W0" = winner of tie 0 in the previous round.
+   The higher-placed club is at home in a single match, and at home in the second leg of a two-legged tie. */
+var PO_TEMPLATES = {
+  "k-v-7":   { rounds:[[["K","P7",1]]], names:["Play-off"],
+               text:"The club in the last European place plays the 7th-placed club (the top club of the Relegation group), one match at home. The winner takes the place." },
+  "k-v-5":   { rounds:[[["K","P5",1]]], names:["Play-off"],
+               text:"The club in the last European place plays the 5th-placed club (the winner of the Conference League round), one match at home. The winner takes the place." },
+  "7v8-k2":  { rounds:[[["P7","P8",1]], [["W0","K",2]]], names:["Semi-final","Final"],
+               text:"7th plays 8th (one match at 7th's ground). The winner plays the club in the last European place over two legs. The winner takes the place." },
+  "7v8-k1":  { rounds:[[["P7","P8",1]], [["K","W0",1]]], names:["Semi-final","Final"],
+               text:"7th plays 8th (one match at 7th's ground). The winner plays the club in the last European place, one match at its ground. The winner takes the place." },
+  "czech":   { rounds:[[["P7","P10",1],["P8","P9",1]], [["W0","W1",1]], [["K","W0",1]]], names:["Semi-finals","Final","Play-off for the place"],
+               text:"7th to 10th play semi-finals (7th v 10th, 8th v 9th) and a final, one match each at the higher-placed club. The winner plays the club in the last European place at its ground. The winner takes the place." },
+  "four-k":  { rounds:[[["K","K+3",1],["K+1","K+2",1]], [["W0","W1",1]]], names:["Semi-finals","Final"],
+               text:"The club in the last European place and the next three clubs play semi-finals and a final, one match each at the higher-placed club. The winner takes the place." },
+  "k3-v-7":  { rounds:[[["K","P7",1],["K+1","K+2",1]], [["W0","W1",1]]], names:["Semi-finals","Final"],
+               text:"The club in the last European place, the next two clubs and 7th place (the top club of the lower group) play semi-finals and a final, one match each at the higher-placed club. The winner takes the place." }
+};
+
+var FORMATS = {
+  // split after playing each other 3 times
+  "scottish-premiership":   { meet:3, split:[grp(CHG,6,1), grp(RLG,6,1)] },
+  "swiss-super-league":     { meet:3, split:[grp(CHG,6,1), grp(RLG,6,1)] },
+  "nifl":                   { meet:3, split:[grp(CHG,6,1), grp(RLG,6,1)], po:"four-k" },
+  // split after home and away
+  "austria-bundesliga":     { meet:2, split:[grp(CHG,6,2), grp("Qualification group",6,2)], po:"7v8-k2" },
+  "denmark-superliga":      { meet:2, split:[grp(CHG,6,2), grp(RLG,6,2)], po:"k-v-7" },
+  "slovakia-nike-liga":     { meet:2, split:[grp(CHG,6,2), grp(RLG,6,2)] },
+  "israel-premier-league":  { meet:2, split:[grp(CHG,6,2), grp(RLG,8,1)] },
+  "greece-super-league":    { meet:2, split:[grp("Championship play-off",4,2), grp("Europe play-off",4,2,true), grp("Relegation play-out",6,2)] },
+  "romania-superliga":      { meet:2, split:[grp("Championship play-off",6,2,true), grp("Play-out",10,1,true)], po:"7v8-k1" },
+  "serbia-superliga":       { meet:2, split:[grp(CHG,8,1), grp(RLG,8,1)] },
+  "bulgaria-first-league":  { meet:2, split:[grp(CHG,4,2), grp("Conference League round",4,2), grp(RLG,8,1)], po:"k-v-5" },
+  "czech-chance-liga":      { meet:2, split:[grp(CHG,6,1), grp("European play-off group",4,0), grp(RLG,6,1)], po:"czech" },
+  "cyprus-league":          { meet:2, split:[grp(CHG,6,2), grp(RLG,6,1)] },
+  "iceland-besta-deild":    { meet:2, split:[grp(CHG,6,1), grp(RLG,6,1)] },
+  "finland-veikkausliiga":  { meet:2, split:[grp(CHG,6,1), grp(RLG,6,1)] },
+  "cymru-premier-league":   { meet:2, split:[grp("Championship conference",6,1), grp("Relegation conference",6,1)], po:"k3-v-7" },
+  "national-league":        { meet:2, split:[grp(CHG,6,1), grp("Challenge group",6,1)], po:"k3-v-7" },
+  "vbet-league":            { meet:2, split:[grp(CHG,6,2), grp(RLG,6,2)] },
+  "super-liga":             { meet:2, split:[grp(CHG,6,2), grp(RLG,6,2)] },
+  "premiera-division":      { meet:2, split:[grp(CHG,6,1), grp(RLG,6,1)] },
+  "abbisent-pouseirre":     { meet:2, split:[grp("Play-off",6,2,true), grp("Play-out",6,2,true)] },
+  // no split, but more than two meetings
+  "hungary-nb-i":           { meet:3 },
+  "armen-premier-league":   { meet:3 },
+  "azi-premier-league":     { meet:3 },
+  "premier-ligavik":        { meet:3 },
+  "erovnali-league":        { meet:3 },
+  "crnogska-league":        { meet:3 },
+  "croatia-hnl":            { meet:4 },
+  "slovenia-prvaliga":      { meet:4 },
+  "bosnia-liga-bih":        { meet:4 },
+  "latvia-virsliga":        { meet:4 },
+  "lithuania-a-lyga":       { meet:4 },
+  "estonia-meistriliiga":   { meet:4 },
+  "ireland-premier-division": { meet:4 },
+  "kosovo-superleague":     { meet:4 },
+  "north-macedonia-first-league": { meet:4 }
+};
+
+function fmtOf(l){ return l.format || { meet:2 }; }
+function meetOf(l){ return fmtOf(l).meet || 2; }
+function splitConf(l){ var f = fmtOf(l); return f.split && f.split.length ? f.split : null; }
+
+/* round robin among the given slots, "meet" times; returns rounds of [home, away] pairs */
+function roundRobin(slots, meet){
+  var teams = shuffle(slots.slice()); if(teams.length % 2) teams.push(-1);
+  var m = teams.length, base = [], out = [];
+  for(var r = 0; r < m - 1; r++){
+    var pr = [];
+    for(var i = 0; i < m / 2; i++){
+      var a = teams[i], b = teams[m - 1 - i];
+      if(a < 0 || b < 0) continue;
+      pr.push((r + i) % 2 === 0 ? [a, b] : [b, a]);
+    }
+    base.push(pr);
+    teams = [teams[0], teams[m - 1]].concat(teams.slice(1, m - 1));
+  }
+  for(var k = 0; k < meet; k++) base.forEach(function(pr){ out.push(pr.map(function(p){ return k % 2 ? [p[1], p[0]] : p; })); });
+  return out;
+}
+function addRounds(fixtures, rounds, offset){
+  rounds.forEach(function(pr, ri){ pr.forEach(function(p){ fixtures.push([offset + ri + 1, p[0], p[1], null, null]); }); });
+}
+function makeFixtures(n, meet){
+  var fx = []; addRounds(fx, roundRobin(Array.from({ length:n }, function(_, i){ return i; }), meet || 2), 0);
+  return fx;
+}
+function lastRound(fixtures){ var m = 0; fixtures.forEach(function(f){ if(f[0] > m) m = f[0]; }); return m; }
+
+/* ---- the split ---- */
+function regularDone(l){ return l.fixtures.every(function(f){ return f[3] !== null || (l.split && f[0] > l.split.round); }); }
+function splitReady(l){ return !!(splitConf(l) && !l.split && l.fixtures.length && l.fixtures.every(function(f){ return f[3] !== null; })); }
+function splitGamesTotal(l){
+  var c = splitConf(l); if(!c) return 0;
+  return c.reduce(function(s, g){ return s + g.size * (g.size - 1) / 2 * g.meet; }, 0);
+}
+function makeSplit(l){
+  var conf = splitConf(l); if(!conf || l.split) return;
+  var order = table(l).map(function(r){ return r.slot; }), at = 0, R = lastRound(l.fixtures), groups = [];
+  conf.forEach(function(g, gi){
+    var size = gi === conf.length - 1 ? order.length - at : Math.min(g.size, order.length - at);
+    var slots = order.slice(at, at + size); at += size;
+    groups.push(slots);
+    if(g.meet > 0 && slots.length > 1) addRounds(l.fixtures, roundRobin(slots, g.meet), R);
+  });
+  l.split = { round:R, groups:groups };
+  ui.round[l.id] = R + 1;
+}
+function splitStarted(l){ return !!(l.split && l.fixtures.some(function(f){ return f[0] > l.split.round && f[3] !== null; })); }
+function undoSplit(l){
+  if(!l.split || splitStarted(l)) return;
+  var R = l.split.round;
+  l.fixtures = l.fixtures.filter(function(f){ return f[0] <= R; });
+  delete l.split; delete l.po;
+}
+
+/* ---- European play-off ---- */
+function poTemplate(l){ var f = fmtOf(l); return f.po ? PO_TEMPLATES[f.po] : null; }
+function euroPlacesK(country){ var e = nextPlaces(country); return e.cl + e.el + e.ecl; }
+function leagueDone(l){ return l.fixtures.length > 0 && l.fixtures.every(function(f){ return f[3] !== null; }) && (!splitConf(l) || !!l.split); }
+/* who would play, from the table as it stands: {ok, k, pos:{spec:position}} */
+function poPlan(l){
+  var tpl = poTemplate(l); if(!tpl) return { ok:false };
+  var k = l.po ? l.po.k : euroPlacesK(l.country), n = l.clubs.length, pos = { K:k }, ok = k >= 2;
+  tpl.rounds[0].forEach(function(t){ t.slice(0, 2).forEach(function(sp){
+    var p = sp === "K" ? k : sp.indexOf("K+") === 0 ? k + Number(sp.slice(2)) : sp.charAt(0) === "P" ? Number(sp.slice(1)) : null;
+    if(p !== null) pos[sp] = p;
+  }); });
+  // every club the play-off needs must exist, be different, and the clubs below the place must really be below it
+  var used = {};
+  Object.keys(pos).forEach(function(sp){ var p = pos[sp]; if(p < 1 || p > n || used[p]) ok = false; used[p] = true; if(sp.charAt(0) === "P" && p <= k) ok = false; });
+  return { ok:ok, k:k, pos:pos };
+}
+function tieWin(t){
+  if(!t || !t.s) return null;
+  if(t.legs === 2) return FUE.tieWinner(t);
+  if(t.s[0] == null || t.s[1] == null) return null;
+  if(t.s[0] > t.s[1]) return t.a; if(t.s[1] > t.s[0]) return t.b;
+  return t.pen === t.a || t.pen === t.b ? t.pen : null;
+}
+function tieStarted(t){ return !!(t.s && t.s.some(function(x){ return x !== null && x !== undefined; })); }
+function tieLegsPlayed(t){
+  if(!t.s) return 0;
+  return t.legs === 2 ? (t.s[0] != null && t.s[1] != null ? 1 : 0) + (t.s[2] != null && t.s[3] != null ? 1 : 0) : (t.s[0] != null && t.s[1] != null ? 1 : 0);
+}
+function mkTie(a, b, legs, rank){
+  // the higher-placed club is "a" (at home) in a single match, "b" (at home in the second leg) over two legs
+  var hi = rank[a] <= rank[b] ? a : b, lo = hi === a ? b : a;
+  return legs === 2 ? { a:lo, b:hi, legs:2, s:[null,null,null,null], pen:null } : { a:hi, b:lo, legs:1, s:[null,null], pen:null };
+}
+function rankOf(l){ var m = {}; table(l).forEach(function(r, i){ m[r.id] = i + 1; }); return m; }
+function makePO(l){
+  var plan = poPlan(l), tpl = poTemplate(l); if(!plan.ok || l.po) return;
+  var t = table(l).map(function(r){ return r.id; }), rank = rankOf(l);
+  var first = tpl.rounds[0].map(function(x){ return mkTie(t[plan.pos[x[0]] - 1], t[plan.pos[x[1]] - 1], x[2], rank); });
+  l.po = { k:plan.k, def:t[plan.k - 1], rounds:[first] };
+  poSync(l);
+}
+/* create the next round once the previous one is decided; rebuild it if an earlier result changes before it starts */
+function poSync(l){
+  var tpl = poTemplate(l), po = l.po; if(!tpl || !po) return;
+  var rank = rankOf(l), changed = false;
+  for(var r = 1; r < tpl.rounds.length; r++){
+    var prev = po.rounds[r - 1]; if(!prev) break;
+    var wins = prev.map(tieWin);
+    if(wins.some(function(w){ return !w; })){
+      if(po.rounds[r] && !po.rounds[r].some(tieStarted)){ po.rounds.length = r; changed = true; }
+      break;
+    }
+    var want = tpl.rounds[r].map(function(x){
+      function who(sp){ return sp === "K" ? po.def : sp.charAt(0) === "W" ? wins[Number(sp.slice(1))] : null; }
+      return mkTie(who(x[0]), who(x[1]), x[2], rank);
+    });
+    var have = po.rounds[r];
+    var same = have && have.length === want.length && have.every(function(t, i){ return (t.a === want[i].a && t.b === want[i].b) || (t.a === want[i].b && t.b === want[i].a); });
+    if(!same && (!have || !have.some(tieStarted))){ po.rounds[r] = want; po.rounds.length = r + 1; changed = true; }
+  }
+  if(changed) save();
+}
+function poWinner(l){
+  var tpl = poTemplate(l), po = l.po; if(!tpl || !po || po.rounds.length < tpl.rounds.length) return null;
+  var last = po.rounds[tpl.rounds.length - 1]; return last.length === 1 ? tieWin(last[0]) : null;
+}
+function poStarted(l){ return !!(l.po && l.po.rounds.some(function(r){ return r.some(tieStarted); })); }
+function undoPO(l){ if(l.po && !poStarted(l)) delete l.po; }
+function poMatches(l){
+  var tpl = poTemplate(l); if(!tpl) return { played:0, total:0 };
+  if(!l.po && !poPlan(l).ok) return { played:0, total:0 };
+  var total = 0, played = 0;
+  tpl.rounds.forEach(function(rd, ri){
+    rd.forEach(function(x, ti){
+      total += x[2];
+      var t = l.po && l.po.rounds[ri] && l.po.rounds[ri][ti];
+      if(t) played += tieLegsPlayed(t);
+    });
+  });
+  return { played:played, total:total };
+}
+/* final order used for next season's European places: the play-off winner takes the defending club's place */
+function euroOrder(l){
+  var ids = table(l).map(function(r){ return r.id; }), w = poWinner(l);
+  if(w && l.po && w !== l.po.def){
+    var a = ids.indexOf(w), b = ids.indexOf(l.po.def);
+    if(a >= 0 && b >= 0){ ids[a] = l.po.def; ids[b] = w; }
+  }
+  return ids;
+}
+
+/* plain-English description of a league's format */
+function timesWord(m){ return m === 1 ? "once" : m === 2 ? "home and away" : m === 3 ? "3 times" : "4 times (twice at home, twice away)"; }
+function formatLines(l){
+  var n = l.clubs.length, m = meetOf(l), out = [];
+  out.push("Each club plays the others " + timesWord(m) + ": " + (m * (n - 1)) + " matchweeks.");
+  var c = splitConf(l);
+  if(c){
+    var at = 1, parts = [];
+    c.forEach(function(g, gi){
+      var size = gi === c.length - 1 ? n - at + 1 : g.size;
+      parts.push(g.name + " (" + ordinal(at) + "–" + ordinal(at + size - 1) + ")" + (g.meet ? ", playing each other " + timesWord(g.meet) : ", no more league matches") + (g.half ? ", points halved and rounded up" : ""));
+      at += size;
+    });
+    out.push("Then the league splits: " + parts.join("; ") + ".");
+    out.push(c.some(function(g){ return g.half; }) ? "Other points carry over. A club stays in its group, so the top group always finishes above the next." : "Points carry over. A club stays in its group, so the top group always finishes above the next.");
+  }
+  var tpl = poTemplate(l);
+  if(tpl) out.push("European play-off: " + tpl.text);
+  return out;
+}
+function ordinal(n){ var s = ["th","st","nd","rd"], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
 
 /* ---------------- welcome (no data yet) ---------------- */
 function viewWelcome(){
@@ -1044,6 +1360,7 @@ function leagueCard(l){
     h("span", { class:"tier" }, "Tier " + l.tier),
     h("span", { class:"name" }, l.name),
     h("span", { class:"leader" }, p.played ? "Top: " + lead.name + " · " + lead.Pts + " pts" : "No matches played yet"),
+    leagueFlag(l),
     h("span", { class:"meter-row num" }, h("span", { class:"meter" }, h("i", { style:"width:" + pct + "%" })), p.played + "/" + p.total));
 }
 function fillResults(box){
@@ -1088,6 +1405,10 @@ function viewLeague(){
     h("div", null, h("p", { class:"eyebrow" }, l.country + " · Tier " + l.tier), h("h2", null, l.name)),
     h("p", { class:"totals num", id:"lprog" }, p.played + " of " + p.total + " matches played")));
   add(wrap, backupBanner());
+  add(wrap, formatBox(l));
+  var status = h("div", { class:"fmt-status" });
+  wrap.appendChild(status);
+  function paintStatus(){ status.textContent = ""; add(status, splitCard(l)); add(status, poCard(l, paintStatus, function(){ drawTable(l, tablePane); })); }
   var body = h("div", { class:"lbody", "data-pane":ui.pane });
   wrap.appendChild(paneSwitch(body, true));
   var tablePane = h("div", { class:"pane-table" });
@@ -1100,10 +1421,13 @@ function viewLeague(){
     key:l.id, clubs:l.clubs, fixtures:l.fixtures, pane:matchPane,
     onChange:function(){
       drawTable(l, tablePane);
+      if(l.po) poSync(l);
+      paintStatus();
       var pr = progress(l), e = document.getElementById("lprog"); if(e) e.textContent = pr.played + " of " + pr.total + " matches played";
     }
   });
   drawClubs(l, clubPane, tablePane);
+  paintStatus();
   return wrap;
 }
 function paneSwitch(body, withClubs){
@@ -1124,10 +1448,15 @@ function drawTable(l, pane){
   pane.textContent = "";
   var t = table(l), b = bands(l);
   pane.appendChild(h("p", { class:"panel-title" }, "Table"));
-  var tb = h("tbody");
+  var tb = h("tbody"), conf = splitConf(l), cuts = {};
+  if(conf && !l.split){ var at = 0; conf.forEach(function(g, gi){ if(gi && at < t.length) cuts[at] = true; at += g.size; }); }
   t.forEach(function(r, i){
     var pos = i + 1, band = b.pos[pos];
-    tb.appendChild(h("tr", { class:(band ? "band-" + band : "") + (ui.highlight === r.id ? " hl" : "") },
+    if(l.split && conf && (i === 0 || t[i - 1].group !== r.group)){
+      var g = conf[r.group] || { name:"Group" };
+      tb.appendChild(h("tr", { class:"grp" }, h("td", { colspan:"11" }, g.name + (g.half ? " · points halved at the split" : ""))));
+    }
+    tb.appendChild(h("tr", { class:(band ? "band-" + band : "") + (ui.highlight === r.id ? " hl" : "") + (cuts[i] ? " cut" : "") },
       h("td", { class:"pos" }, pos),
       h("td", { class:"club" }, clubLink(r.id, r.name)),
       h("td", null, r.P), h("td", { class:"wide" }, r.W), h("td", { class:"wide" }, r.D), h("td", { class:"wide" }, r.L),
@@ -1144,7 +1473,9 @@ function drawTable(l, pane){
         h("th", { class:"wide" }, "GF"), h("th", { class:"wide" }, "GA"), h("th", null, "GD"), h("th", null, "Pts"), h("th", { class:"wide" }, "Form"))),
       tb)));
   pane.appendChild(h("div", { class:"legend" }, b.legend.map(function(x){ return h("span", null, h("i", { style:"background:var(--b-" + x[0] + ")" }), x[1]); })));
-  pane.appendChild(h("p", { class:"tiebreak" }, "Level on points: goal difference first, then goals scored."));
+  pane.appendChild(h("p", { class:"tiebreak" }, "Level on points: goal difference first, then goals scored."
+    + (conf && !l.split ? " The line shows where the league will split." : "")
+    + (conf && conf.some(function(g){ return g.half; }) ? " In a group with halved points, a club that gained from rounding up goes below a club level on points." : "")));
 }
 /* matchweek-by-matchweek score entry. host = {key, clubs, fixtures, pane, onChange} */
 function matchesPanel(host){
@@ -1217,6 +1548,95 @@ function drawClubs(l, pane, tablePane){
     grid.appendChild(h("label", { for:"rename-" + id }, "Club name", inp));
   });
   pane.appendChild(grid);
+}
+
+/* ---------------- league formats on the league page ---------------- */
+function leagueFlag(l){
+  var txt = null;
+  if(splitReady(l)) txt = "Ready to split";
+  else if(poTemplate(l) && leagueDone(l) && !poWinner(l) && (l.po || poPlan(l).ok)) txt = "European play-off";
+  return txt ? h("span", { class:"lflag" }, txt) : null;
+}
+function formatBox(l){
+  if(!l.format || (meetOf(l) === 2 && !splitConf(l) && !poTemplate(l))) return null;
+  return h("details", { class:"fmt" }, h("summary", null, "How this league works"),
+    h("ul", null, formatLines(l).map(function(x){ return h("li", null, x); })));
+}
+function splitCard(l){
+  var conf = splitConf(l); if(!conf) return null;
+  if(splitReady(l)){
+    var t = table(l), at = 0, n = t.length;
+    return h("div", { class:"card fmt-card" },
+      h("h3", null, "The regular season is finished"),
+      h("p", null, "Now the league splits. Each club keeps its points" + (conf.some(function(g){ return g.half; }) ? " (halved in some groups)" : "") + " and plays only the clubs in its group."),
+      h("ul", null, conf.map(function(g, gi){
+        var size = gi === conf.length - 1 ? n - at : g.size, from = at; at += size;
+        return h("li", null, h("b", null, g.name), ": " + t.slice(from, from + size).map(function(r){ return r.name; }).join(", "));
+      })),
+      h("button", { class:"btn btn-primary", type:"button", onclick:function(){ makeSplit(l); save(); toast("The league has split"); render(); } }, "Make the split"));
+  }
+  if(l.split && !splitStarted(l)){
+    return h("p", { class:"muted fmt-line" }, "The league split after matchweek " + l.split.round + ". ",
+      h("button", { class:"linkish", type:"button", onclick:function(){ undoSplit(l); save(); toast("Split undone"); render(); } }, "Undo the split"));
+  }
+  return null;
+}
+function poCard(l, repaint, retable){
+  var tpl = poTemplate(l); if(!tpl || !leagueDone(l)) return null;
+  var plan = poPlan(l);
+  if(!l.po && !plan.ok) return h("p", { class:"muted fmt-line" }, "No European play-off this season: " + l.country + " has " + plural(plan.k, "European place") + " apart from the Canera Cup, so the play-off isn't needed.");
+  var card = h("div", { class:"card fmt-card" }, h("h3", null, "European play-off"));
+  if(!l.po){
+    var t = table(l), def = t[plan.k - 1];
+    card.appendChild(h("p", null, tpl.text));
+    card.appendChild(h("p", { class:"muted" }, "The place is " + ordinal(plan.k) + ", held by " + (def ? def.name : "?") + "."));
+    card.appendChild(h("button", { class:"btn btn-primary", type:"button", onclick:function(){ makePO(l); save(); render(); } }, "Set up the play-off"));
+    return card;
+  }
+  var w = poWinner(l), def = l.po.def;
+  card.appendChild(h("p", { class:"muted" }, "For the " + ordinal(l.po.k) + " place, held by " + clubName(def) + "."));
+  l.po.rounds.forEach(function(rd, ri){
+    card.appendChild(h("p", { class:"panel-title", style:"margin-top:10px" }, (tpl.names && tpl.names[ri]) || "Round " + (ri + 1)));
+    var box = h("div", { class:"ties" });
+    rd.forEach(function(t, ti){
+      var key = "po-" + l.id + "-" + ri + "-" + ti;
+      function changed(){ poSync(l); retable(); repaint(); var pr = progress(l), e = document.getElementById("lprog"); if(e) e.textContent = pr.played + " of " + pr.total + " matches played"; }
+      if(t.legs === 2) box.appendChild(tieList([t], key, { label:clubName, onChange:changed }));
+      else box.appendChild(singleTie(t, key, changed));
+    });
+    card.appendChild(box);
+  });
+  if(w) card.appendChild(h("p", { class:"ok-line" }, clubName(w) + (w === def ? " keeps the place." : " wins the play-off and takes the " + ordinal(l.po.k) + " place from " + clubName(def) + ".")));
+  if(!poStarted(l)) card.appendChild(h("button", { class:"linkish", type:"button", onclick:function(){ undoPO(l); save(); render(); } }, "Undo the play-off"));
+  return card;
+}
+/* one match; a draw is decided on penalties */
+function singleTie(t, key, onChange){
+  var card = h("div", { class:"tie" }), foot = h("div", { class:"tie-foot" }), tiles = [];
+  var st = scoreTiles("t-" + key, t.s[0], t.s[1], [clubName(t.a) + " goals", clubName(t.b) + " goals"], tiles, function(hg, ag){
+    var before = JSON.stringify(t.s);
+    t.s[0] = hg; t.s[1] = ag;
+    if(!(hg !== null && ag !== null && hg === ag)) t.pen = null;
+    if(JSON.stringify(t.s) !== before){
+      if(hg !== null && ag !== null) S.meta.changesSinceBackup = (S.meta.changesSinceBackup || 0) + 1;
+      save(); paint(); onChange();
+    }
+  });
+  card.appendChild(h("div", { class:"leg single" }, h("span", { class:"team home" }, clubLink(t.a)), st.el, h("span", { class:"team" }, clubLink(t.b))));
+  card.appendChild(foot);
+  function paint(){
+    foot.textContent = "";
+    var full = t.s[0] !== null && t.s[1] !== null, w = tieWin(t);
+    card.className = "tie" + (w ? " decided" : "") + (full && t.s[0] === t.s[1] && !t.pen ? " level" : "");
+    if(!full){ foot.appendChild(h("span", null, "At " + clubName(t.a) + "'s ground")); return; }
+    if(t.s[0] === t.s[1]){
+      foot.appendChild(h("span", { class:"pens" }, h("span", null, "Won on penalties:"), [t.a, t.b].map(function(id){
+        return h("button", { class:"btn", type:"button", "aria-pressed": t.pen === id ? "true" : "false", onclick:function(){ t.pen = id; save(); paint(); onChange(); } }, clubName(id));
+      })));
+    } else foot.appendChild(h("span", { class:"win" }, clubName(w) + " go through"));
+  }
+  paint();
+  return card;
 }
 
 /* ---------------- calculated values, refreshed whenever data changes ---------------- */
@@ -1639,7 +2059,8 @@ function tieList(ties, key, opts){
           save(); paint(); if(opts.onChange) opts.onChange();
         }
       });
-      return h("div", { class:"leg" }, h("span", { class:"lbl" }, "Leg " + n), h("span", { class:"team home" }, clubLink(homeId, euroName(homeId))), st.el, h("span", { class:"team" }, clubLink(awayId, euroName(awayId))));
+      var lab = opts.label || euroName;
+      return h("div", { class:"leg" }, h("span", { class:"lbl" }, "Leg " + n), h("span", { class:"team home" }, clubLink(homeId, lab(homeId))), st.el, h("span", { class:"team" }, clubLink(awayId, lab(awayId))));
     }
     card.appendChild(leg(1, t.a, t.b, 0, 1));
     card.appendChild(leg(2, t.b, t.a, 2, 3));
@@ -1937,25 +2358,6 @@ function confirmNewSeason(plan){
       dirty ? h("p", { class:"warn-line" }, "You haven't saved a backup since your last changes. Only a backup can undo this.") : h("p", { class:"muted" }, "Only a backup can undo this.")),
     onOk:function(){ startSeason(plan); } });
 }
-function makeFixtures(n){
-  var teams = shuffle(Array.from({ length:n }, function(_, i){ return i; }));
-  if(n % 2) teams.push(-1);
-  var m = teams.length, half = [];
-  for(var r = 0; r < m - 1; r++){
-    var pr = [];
-    for(var i = 0; i < m / 2; i++){
-      var a = teams[i], b = teams[m - 1 - i];
-      if(a < 0 || b < 0) continue;
-      pr.push((r + i) % 2 === 0 ? [a, b] : [b, a]);
-    }
-    half.push(pr);
-    teams = [teams[0], teams[m - 1]].concat(teams.slice(1, m - 1));
-  }
-  var fx = [];
-  half.forEach(function(pr, ri){ pr.forEach(function(p){ fx.push([ri + 1, p[0], p[1], null, null]); }); });
-  half.forEach(function(pr, ri){ pr.forEach(function(p){ fx.push([ri + m, p[1], p[0], null, null]); }); });
-  return fx;
-}
 function noLeagueClub(cname, name){
   var key = normName(name);
   for(var id in S.clubs){ var c = S.clubs[id]; if(c.noLeague && c.country === cname && normName(c.name) === key) return id; }
@@ -2023,11 +2425,13 @@ function finalizeCoef(label){
 }
 function startSeason(plan){
   var acc = liveAccess();
-  var finalTables = {}; S.leagues.forEach(function(l){ finalTables[l.id] = table(l).map(function(r){ return r.id; }); });
+  var finalTables = {}; S.leagues.forEach(function(l){ finalTables[l.id] = euroOrder(l); });
   var snap = { label:S.season.label, endedAt:Date.now(), leagues:[], moves:[] };
   S.leagues.forEach(function(l){
     var p = progress(l);
-    snap.leagues.push({ id:l.id, name:l.name, country:l.country, tier:l.tier, played:p.played, total:p.total,
+    var w = poWinner(l), note = w ? clubName(w) + " won the European play-off" : null;
+    snap.leagues.push({ id:l.id, name:l.name, country:l.country, tier:l.tier, played:p.played, total:p.total, note:note,
+      groups: l.split ? l.split.groups.map(function(g){ return g.length; }) : null,
       table:table(l).map(function(r){ return [r.id, r.name, r.P, r.W, r.D, r.L, r.GF, r.GA, r.Pts]; }) });
   });
   if(S.europe) S.euroHistory.push(europeSnapshot());
@@ -2053,7 +2457,7 @@ function startSeason(plan){
       snap.moves.push({ club:id, name:clubName(id), from:o.league, to:null, kind:"out", replacedBy:nm });
     });
   });
-  S.leagues.forEach(function(l){ l.clubs = members[l.id]; l.fixtures = makeFixtures(l.clubs.length); });
+  S.leagues.forEach(function(l){ l.clubs = members[l.id]; l.fixtures = makeFixtures(l.clubs.length, meetOf(l)); delete l.split; delete l.po; });
   S.history.push(snap);
   S.europe = nextEurope;
   S.season = { label:plan.label, number:(S.season.number || 1) + 1 };
@@ -2098,13 +2502,15 @@ function viewHistory(){
 }
 function showFinal(box, snap, sl){
   box.textContent = "";
-  var ups = {}, downs = {};
+  var ups = {}, downs = {}, cuts = {};
+  if(sl.groups){ var at = 0; sl.groups.forEach(function(g, gi){ if(gi) cuts[at] = true; at += g; }); }
   snap.moves.forEach(function(m){ if(m.from === sl.id){ if(m.kind === "up") ups[m.club] = 1; else downs[m.club] = 1; } });
   box.appendChild(h("h4", { style:"font-family:var(--display); font-size:20px; margin:16px 0 8px" }, sl.name + " " + snap.label + " — final table"));
+  if(sl.note) box.appendChild(h("p", { class:"muted", style:"margin:0 0 8px" }, sl.note + "."));
   box.appendChild(h("div", { class:"table-wrap" }, h("table", { class:"lt" },
     h("thead", null, h("tr", null, h("th", null, "Pos"), h("th", { class:"club" }, "Club"), h("th", null, "P"), h("th", null, "W"), h("th", null, "D"), h("th", null, "L"), h("th", null, "GF"), h("th", null, "GA"), h("th", null, "Pts"))),
     h("tbody", null, sl.table.map(function(r, i){
-      var cls = i === 0 ? "band-champ" : ups[r[0]] ? "band-promo" : downs[r[0]] ? "band-rel" : "";
+      var cls = (i === 0 ? "band-champ" : ups[r[0]] ? "band-promo" : downs[r[0]] ? "band-rel" : "") + (cuts[i] ? " cut" : "");
       return h("tr", { class:cls }, h("td", { class:"pos" }, i + 1), h("td", { class:"club" }, r[1]), h("td", null, r[2]), h("td", null, r[3]), h("td", null, r[4]), h("td", null, r[5]), h("td", null, r[6]), h("td", null, r[7]), h("td", { class:"pts" }, r[8]));
     })))));
   box.scrollIntoView({ behavior:"smooth", block:"start" });
@@ -2308,7 +2714,8 @@ function boot(){
   } catch(e){}
 }
 window.__fu = { table:function(id){ return table(L[id]); }, data:function(){ return S; }, seasonPoints:seasonPoints, liveRanking:liveRanking, liveAccess:liveAccess,
-  fieldOf:fieldOf, lpStandings:lpStandings, clubCoefStart:clubCoefStart, cupChampion:cupChampion, render:function(){ REV++; render(); }, planSeason:planSeason, startSeason:startSeason };
+  fieldOf:fieldOf, lpStandings:lpStandings, clubCoefStart:clubCoefStart, cupChampion:cupChampion, render:function(){ REV++; render(); }, planSeason:planSeason, startSeason:startSeason,
+  progress:function(id){ return progress(L[id]); }, euroOrder:function(id){ return euroOrder(L[id]); }, poPlan:function(id){ return poPlan(L[id]); }, poWinner:function(id){ return poWinner(L[id]); }, nextPlaces:nextPlaces };
 boot();
 
 })();
